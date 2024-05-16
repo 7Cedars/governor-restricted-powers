@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {CommunityToken} from "../../src/CommunityToken.sol";
@@ -15,5 +15,4 @@ contract CommunityTokenTest is Test {
         communityToken.awardIdentity(address(1));
         assertEq(communityToken.balanceOf(address(1)), 1);
     }
-
 }
