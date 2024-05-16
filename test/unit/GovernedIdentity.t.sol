@@ -45,11 +45,16 @@ contract GovernedIdentityTest is Test {
     uint256 proposalId; 
     uint256 voteStart = 86_401; 
     uint256 voteEnd = 691_201; 
+    uint256 proposedStateChange = 666666666666; 
 
-    modifier distributeCommunityTokens() {
+    modifier distributeAndDelegateCommunityTokens() {
         for (uint256 i; i < communityMembers.length; i++) {
             communityToken.awardIdentity(communityMembers[i]);
+            // note: every member delegates to themselves. 
+            vm.prank(communityMembers[i]); 
+            communityToken.delegate(communityMembers[i]); 
         }
+
         _;
     }
 
@@ -59,7 +64,7 @@ contract GovernedIdentityTest is Test {
       uint256[] memory values = new uint256[](1); 
         values[0] = 0;
       bytes[] memory calldatas = new bytes[](1); 
-        calldatas[0] = (abi.encodeWithSignature("helloWorld(uint256)", 123));
+        calldatas[0] = (abi.encodeWithSignature("helloWorld(uint256)", proposedStateChange));
       string memory description = "this is a hellowWorld proposal";
 
       proposalId = governedIdentity.hashProposal(targets, values, calldatas, keccak256(bytes(description)));
@@ -88,7 +93,7 @@ contract GovernedIdentityTest is Test {
         lawTemplates = new LawTemplates();
     }
 
-    function test_checkStateProposal() public distributeCommunityTokens createProposal {
+    function test_checkStateProposal() public distributeAndDelegateCommunityTokens createProposal {
       console.log("block number at start:", block.number);
 
       vm.roll(7_000);
@@ -104,7 +109,7 @@ contract GovernedIdentityTest is Test {
       console.log("state at block number 100_000 roll", block.number);
     }
 
-    function test_membersCanVoteProposalWithinTimeFrame() public distributeCommunityTokens createProposal {
+    function test_membersCanVoteProposalWithinTimeFrame() public distributeAndDelegateCommunityTokens createProposal {
       uint8 vote = 1;  
 
       vm.roll(10_000);
@@ -118,25 +123,44 @@ contract GovernedIdentityTest is Test {
       governedIdentity.castVote(proposalId, vote);
     }
 
-    function test_passedProposalCallsExternalFunction() public distributeCommunityTokens createProposal {
+    function test_passedProposalCallsExternalFunction() public distributeAndDelegateCommunityTokens createProposal {
       uint256 numberOfYesVotes = 8;  
       uint8 vote = 1;  
 
+      // voting on proposal...  
       vm.roll(10_000);
         for (uint256 i; i < numberOfYesVotes; i++) {
           vm.prank(communityMembers[i]);
           governedIdentity.castVote(proposalId, vote);
         }
 
-      vm.roll(15_000);
+      // time roll so vote time passes... 
+      vm.roll(800_000);
       governedIdentity.state(proposalId);
+
+      // check outcome is indeed succeed: 
       ( uint256 againstVotes, 
         uint256 forVotes,
         uint256 abstainVotes ) = governedIdentity.proposalVotes(proposalId);
-
       console.log("votes against:", againstVotes);  
       console.log("votes for:", forVotes);  
       console.log("votes abstain:", abstainVotes);  
+
+      // call execute on suceeded proposal: 
+      address[] memory targets = new address[](1); 
+        targets[0] = address(lawTemplates);
+      uint256[] memory values = new uint256[](1); 
+        values[0] = 0;
+      bytes[] memory calldatas = new bytes[](1); 
+        calldatas[0] = (abi.encodeWithSignature("helloWorld(uint256)", proposedStateChange));
+      string memory description = "this is a hellowWorld proposal";
+      bytes32 descriptionHash = keccak256(bytes(description));   
+
+      // check if target contract state has indeed breen changed. 
+      governedIdentity.execute(targets, values, calldatas, descriptionHash);
+      uint256 result = lawTemplates.justAStateVar(); 
+
+      console.log("HELLO WORLD", result); 
     }
 
 

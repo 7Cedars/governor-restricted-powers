@@ -10,7 +10,7 @@ contract LawTemplates is AccessControl {
   }
 
   /* State variables */
-  uint256 justAStateVar;
+  uint256 public justAStateVar;
 
   /* Events */
   event IncorrectSelector(address indexed sender); 
