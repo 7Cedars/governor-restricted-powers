@@ -6,7 +6,6 @@
 // possible extension to add at later stage: timeLockController.
 // although, possibly AccessManager.schedule will work better
 
-
 // NB: proposalStates = ['Pending', 'Active', 'Canceled', 'Defeated', 'Succeeded', 'Queued', 'Expired', 'Executed'];
 // NB:    enum VoteType { Against, For, Abstain }
 
@@ -30,7 +29,7 @@ contract GovernedIdentity is
 {
     constructor(IVotes _token)
         Governor("GovernedIdentity")
-        GovernorSettings(7200 /* 1 day */, 50400 /* 1 week */, 0)
+        GovernorSettings(7200, /* 1 day */ 50400, /* 1 week */ 0)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
     {}

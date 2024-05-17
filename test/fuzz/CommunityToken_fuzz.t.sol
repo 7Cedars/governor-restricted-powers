@@ -12,7 +12,6 @@ contract CommunityTokenTest is Test {
     }
 
     function testFuzz_SetNumber(address member) public {
-
         if (member != address(0)) {
             communityToken.awardIdentity(member);
             assertEq(communityToken.balanceOf(member), 1);
