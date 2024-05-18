@@ -5,14 +5,25 @@ pragma solidity ^0.8.20;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract LawTemplates is AccessControl {
+    /* Type declarations */
+    struct Law {
+      bytes32 role; 
+      string description;
+      // bytes32 descriptionHash; £q replace string with bytes32 ?   
+    }
+    // This is Enough! (if I can get )
+    // bytes4 function selector to Law (role + description) mapping   
+    mapping(bytes4 => Law) public restrictedLaws; 
+
+    /* State variables */
     bytes32 public constant MEMBER_ROLE = keccak256("MEMBER");
     bytes32 public constant COUNCILLOR_ROLE = keccak256("COUNCILLOR");
     bytes32 public constant JUDGE_ROLE = keccak256("JUDGE");
 
-    /* State variables */
     uint256 public freeStateVar;
     uint256 public restrictedStateVar;
-
+    uint256 public internallySetStateVar;
+    
     /* Events */
     event IncorrectSelector(address indexed sender);
 
@@ -21,6 +32,12 @@ contract LawTemplates is AccessControl {
     /* FUNCTIONS */
     /* constructor */
     constructor() {
+      // laws.push(
+      //   Law({
+      //     selector: 0xabac0926,
+      //     role: keccak256("COUNCILLOR"), 
+      //     description: "this is a test law"
+      //   })); 
         // Grant the contract deployer the default admin role: it will be able
         // to grant and revoke any roles
     }
@@ -31,12 +48,30 @@ contract LawTemplates is AccessControl {
         emit IncorrectSelector(msg.sender);
     }
 
+    /**
+     * @notice This should be the entry point to laws (written as internal function). 
+     *  If I am correct, it should be possible to get the selector of the function from the dataCall. 
+     * This would mean that an external contract would call this function with the abi_encoded signature 
+     * of the _internal_ function. 
+     * 
+     * As such, the external party would need to have access to the actual file that has the contracts. 
+     * It is not possible to lookup the meaning of laws on-chain.  
+     * 
+      */
+    function accessLaw(Law memory law, bytes memory dataCall) public returns (bool success) {
+      _checkRole(law.role); 
+      (success, ) = address(this).call(dataCall);
+      
+      return success;  
+    }
+
     function helloWorld(uint256 _var) external {
         freeStateVar = _var;
     }
 
-    function helloWorldRestricted(uint256 _var) external onlyRole(COUNCILLOR_ROLE) {
+    function helloWorldRestricted(uint256 _var) external onlyRole(COUNCILLOR_ROLE) returns (bytes32 role) {
         restrictedStateVar = _var;
+        return COUNCILLOR_ROLE; 
     }
 
     /**
@@ -58,6 +93,9 @@ contract LawTemplates is AccessControl {
 
     /* public */
     /* internal */
+    function _internalLaw(uint256 _var) internal {
+      internallySetStateVar = _var; 
+    }
     /* private */
 }
 

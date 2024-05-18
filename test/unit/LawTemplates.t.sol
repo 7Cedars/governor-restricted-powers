@@ -67,7 +67,9 @@ contract GovernedIdentityTest is Test {
       uint256 _var = 444;
 
       vm.prank(communityMembers[2]);
-      lawTemplates.helloWorldRestricted(_var);
+      bytes32 result = lawTemplates.helloWorldRestricted(_var);
+
+      console.logBytes32(result); 
 
       vm.assertEq(lawTemplates.restrictedStateVar(), _var);  
     }

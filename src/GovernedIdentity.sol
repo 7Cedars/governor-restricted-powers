@@ -34,6 +34,8 @@ contract GovernedIdentity is
         GovernorVotesQuorumFraction(4)
     {}
 
+    // function callInternalLaw() public ( dataCall)
+
     // The following functions are overrides required by Solidity.
 
     function votingDelay() public view override(Governor, GovernorSettings) returns (uint256) {
