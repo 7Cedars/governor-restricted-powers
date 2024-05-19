@@ -36,23 +36,11 @@ contract GovernedIdentityTest is Test {
         uint256 numberOfCouncillors = 6;
         uint256 numberOfJudges = 2;
 
-        for (uint256 i; i < numberOfMembers; i++) {
-            lawTemplates.awardMemberRole(communityMembers[i]);
-        }
-
-        for (uint256 i; i < numberOfMembers; i++) {
-            lawTemplates.awardCouncillorRole(communityMembers[i]);
-        }
-
-        for (uint256 i; i < numberOfMembers; i++) {
-            lawTemplates.awardJudgeRole(communityMembers[i]);
-        }
-
         _;
     }
 
     function setUp() public {
-        lawTemplates = new LawTemplates();
+        lawTemplates = new LawTemplates(address(1));
     }
 
     function test_helloWorldRestrictedRevertsIfNotCalledByCouncillor() public awardRoles {
