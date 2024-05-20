@@ -2,8 +2,8 @@
 pragma solidity 0.8.24;
 
 /* 
-NB: this test file is to try out Governor and AccesControl contracts. 
-They are not proper tests (for instance, they miss asserts) 
+NB: this test file is to test and try out functionality of the GovernorDividedPowers extension to Openzeppelin's Governor contract.  
+They are often not proper tests (for instance, many miss asserts) 
 */
 
 import {Test, console} from "forge-std/Test.sol";
@@ -14,7 +14,8 @@ import {GovernorDividedPowers} from "../../src/GovernorDividedPowers.sol";
 
 contract GovernorDividedPowersTest is Test {
   LawTemplates lawTemplates; 
-  GovernorDividedPowers governorDividedPowers; 
+  GovernedIdentity governedIdentity; 
+  CommunityToken communityToken;
 
       address[] communityMembers = [
         address(1),
@@ -30,17 +31,17 @@ contract GovernorDividedPowersTest is Test {
     ];
 
   function setUp() public {
-    governorDividedPowers = new GovernorDividedPowers(communityMembers[0]);
-    lawTemplates = new LawTemplates(address(governorDividedPowers));
+    communityToken = new CommunityToken();
+    governedIdentity = new GovernedIdentity(communityToken, communityMembers[0]);
+    lawTemplates = new LawTemplates(address(governedIdentity));
   }
 
   function test_GovernorCanRewardCouncillorAndJudgeRoles() public {
-
     vm.startPrank(communityMembers[0]); 
-    governorDividedPowers.grantRole(governorDividedPowers.COUNCILLOR(), communityMembers[1], 1); 
-    governorDividedPowers.grantRole(governorDividedPowers.JUDGE(), communityMembers[2], 1); 
+    governedIdentity.grantRole(governedIdentity.COUNCILLOR(), communityMembers[1], 0); 
+    governedIdentity.grantRole(governedIdentity.JUDGE(), communityMembers[2], 0); 
+    governedIdentity.grantRole(governedIdentity.CITIZEN(), communityMembers[3], 0); 
     vm.stopPrank();
-
   }
 
     function test_GovernorCanRestrictFunctionByRole() public {
@@ -51,10 +52,10 @@ contract GovernorDividedPowersTest is Test {
       selectors[0] = 0x51ea00d8; 
 
     vm.startPrank(communityMembers[0]); 
-    governorDividedPowers.grantRole(governorDividedPowers.COUNCILLOR(), communityMembers[1], 0); 
-    governorDividedPowers.grantRole(governorDividedPowers.JUDGE(), communityMembers[2], 0); 
+    governedIdentity.grantRole(governedIdentity.COUNCILLOR(), communityMembers[1], 0); 
+    governedIdentity.grantRole(governedIdentity.JUDGE(), communityMembers[2], 0); 
     
-    governorDividedPowers.setTargetFunctionRole(address(lawTemplates), selectors, governorDividedPowers.JUDGE()); 
+    governedIdentity.setTargetFunctionRole(address(lawTemplates), selectors, governedIdentity.JUDGE()); 
     vm.stopPrank();
 
     restrictedStateVarBefore = lawTemplates.restrictedStateVar(); 
@@ -63,7 +64,7 @@ contract GovernorDividedPowersTest is Test {
     vm.warp(123_000);
 
     // check 
-    governorDividedPowers.canCall(communityMembers[2], address(lawTemplates), selectors[0]); 
+    governedIdentity.canCall(communityMembers[2], address(lawTemplates), selectors[0]); 
 
     restrictedStateVarBefore = lawTemplates.restrictedStateVar(); 
 

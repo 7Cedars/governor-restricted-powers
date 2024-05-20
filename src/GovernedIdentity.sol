@@ -11,12 +11,13 @@
 
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/governance/Governor.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorStorage.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
+import { GovernorSettings } from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
+import { GovernorCountingSimple } from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
+import { GovernorStorage } from "@openzeppelin/contracts/governance/extensions/GovernorStorage.sol";
+import { GovernorVotes, IVotes } from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+import { GovernorVotesQuorumFraction } from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+import { GovernorDividedPowers } from "./GovernorDividedPowers.sol"; 
 
 // @custom:security-contact cedars7@proton.me
 contract GovernedIdentity is
@@ -25,13 +26,21 @@ contract GovernedIdentity is
     GovernorCountingSimple,
     GovernorStorage,
     GovernorVotes,
-    GovernorVotesQuorumFraction
+    GovernorVotesQuorumFraction, 
+    GovernorDividedPowers
 {
-    constructor(IVotes _token)
+    // role definitions. 
+    // Note that it is also possible to set roles through the grantRole function. 
+    uint64 public constant COUNCILLOR = 1; 
+    uint64 public constant JUDGE = 2; 
+    uint64 public constant CITIZEN = 3; 
+
+    constructor(IVotes _token, address _initialAdmin)
         Governor("GovernedIdentity")
         GovernorSettings(7200, /* 1 day */ 50400, /* 1 week */ 0)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
+        GovernorDividedPowers(_initialAdmin)
     {}
 
     // function callInternalLaw() public ( dataCall)

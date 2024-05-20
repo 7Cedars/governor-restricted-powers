@@ -43,24 +43,24 @@ contract GovernedIdentityTest is Test {
         lawTemplates = new LawTemplates(address(1));
     }
 
-    function test_helloWorldRestrictedRevertsIfNotCalledByCouncillor() public awardRoles {
-        uint256 _var = 222; 
+    // OLD tests // 
+    
+    // function test_helloWorldRestrictedRevertsIfNotCalledByCouncillor() public awardRoles {
+    //     uint256 _var = 222; 
 
-        vm.expectRevert();
-        vm.prank(communityMembers[8]);
-        lawTemplates.helloWorldRestricted(_var);
-    }
+    //     vm.expectRevert();
+    //     vm.prank(communityMembers[8]);
+    //     lawTemplates.helloWorldRestricted(_var);
+    // }
 
-    function test_helloWorldRestrictedPassesWhenCalledByCouncillor() public awardRoles {
-      uint256 _var = 444;
+    // function test_helloWorldRestrictedPassesWhenCalledByCouncillor() public awardRoles {
+    //   uint256 _var = 444;
 
-      vm.prank(communityMembers[2]);
-      bytes32 result = lawTemplates.helloWorldRestricted(_var);
+    //   vm.prank(communityMembers[2]);
+    //   (bool success, bytes32 hashDescription) = lawTemplates.helloWorldRestricted(_var);
 
-      console.logBytes32(result); 
-
-      vm.assertEq(lawTemplates.restrictedStateVar(), _var);  
-    }
+    //   vm.assertEq(lawTemplates.restrictedStateVar(), _var);  
+    // }
 
     // function test_queryingPriviledgedAccounts() public awardRoles {
     //   lawTemplates

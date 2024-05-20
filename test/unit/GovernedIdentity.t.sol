@@ -89,7 +89,7 @@ contract GovernedIdentityTest is Test {
 
     function setUp() public {
         communityToken = new CommunityToken();
-        governedIdentity = new GovernedIdentity(communityToken);
+        governedIdentity = new GovernedIdentity(communityToken, communityMembers[0]);
         lawTemplates = new LawTemplates(address(governedIdentity));
     }
 
