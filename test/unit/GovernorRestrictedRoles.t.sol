@@ -9,15 +9,16 @@ They are often not proper tests (for instance, many miss asserts)
 import {Test, console} from "forge-std/Test.sol";
 import {CommunityToken} from "../../src/CommunityToken.sol";
 import {GovernedIdentity} from "../../src/GovernedIdentity.sol";
-import {LawTemplates} from "../../src/LawTemplates.sol";
-import {GovernorDividedPowers} from "../../src/GovernorDividedPowers.sol";
+import {LawTemplate} from "../../src/LawTemplate.sol";
+import {LawsPlayground} from "../../src/LawsPlayground.sol"; 
+import {GovernorRestrictedRoles} from "../../src/GovernorRestrictedRoles.sol";
 
 contract GovernorDividedPowersTest is Test {
-  LawTemplates lawTemplates; 
+  LawTemplate lawTemplate; 
+  LawsPlayground lawsPlayground; 
   GovernedIdentity governedIdentity; 
   CommunityToken communityToken;
-
-      address[] communityMembers = [
+  address[] communityMembers = [
         address(1),
         address(2),
         address(3),
@@ -33,7 +34,7 @@ contract GovernorDividedPowersTest is Test {
   function setUp() public {
     communityToken = new CommunityToken();
     governedIdentity = new GovernedIdentity(communityToken, communityMembers[0]);
-    lawTemplates = new LawTemplates(address(governedIdentity));
+    lawsPlayground = new LawsPlayground(address(governedIdentity));
   }
 
   function test_GovernorCanRewardCouncillorAndJudgeRoles() public {
@@ -44,38 +45,38 @@ contract GovernorDividedPowersTest is Test {
     vm.stopPrank();
   }
 
-    function test_GovernorCanRestrictFunctionByRole() public {
+  function test_GovernorCanRestrictFunctionByRole() public {
       uint256 proposedStateChange = 3333; 
       uint256 restrictedStateVarBefore; 
       uint256 restrictedStateVarAfter; 
       bytes4[] memory selectors = new bytes4[](1); 
-      selectors[0] = 0x51ea00d8; 
+      selectors[0] = 0xc70aff61; //  helloWorldRestrictedOne
 
     vm.startPrank(communityMembers[0]); 
     governedIdentity.grantRole(governedIdentity.COUNCILLOR(), communityMembers[1], 0); 
     governedIdentity.grantRole(governedIdentity.JUDGE(), communityMembers[2], 0); 
     
-    governedIdentity.setTargetFunctionRole(address(lawTemplates), selectors, governedIdentity.JUDGE()); 
+    governedIdentity.setTargetFunctionRole(address(lawsPlayground), selectors, governedIdentity.JUDGE()); 
     vm.stopPrank();
 
-    restrictedStateVarBefore = lawTemplates.restrictedStateVar(); 
+    restrictedStateVarBefore = lawsPlayground.restrictedStateVarOne(); 
 
     vm.roll(7_000);
     vm.warp(123_000);
 
     // check 
-    governedIdentity.canCall(communityMembers[2], address(lawTemplates), selectors[0]); 
+    governedIdentity.canCall(communityMembers[2], address(lawsPlayground), selectors[0]); 
 
-    restrictedStateVarBefore = lawTemplates.restrictedStateVar(); 
+    restrictedStateVarBefore = lawsPlayground.restrictedStateVarOne(); 
 
     vm.expectRevert(); 
     vm.prank(communityMembers[1]); 
-    lawTemplates.helloWorldRestricted(proposedStateChange); 
+    lawsPlayground.helloWorldRestrictedOne(proposedStateChange); 
 
     vm.prank(communityMembers[2]); 
-    lawTemplates.helloWorldRestricted(proposedStateChange); 
+    lawsPlayground.helloWorldRestrictedOne(proposedStateChange); 
 
-    restrictedStateVarAfter = lawTemplates.restrictedStateVar(); 
+    restrictedStateVarAfter = lawsPlayground.restrictedStateVarOne(); 
 
     assert(restrictedStateVarBefore != restrictedStateVarAfter); 
 

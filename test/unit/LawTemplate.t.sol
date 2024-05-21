@@ -8,10 +8,10 @@ pragma solidity 0.8.24;
  *
  */
 import {Test, console} from "forge-std/Test.sol";
-import {LawTemplates} from "../../src/LawTemplates.sol";
+import {LawTemplate} from "../../src/LawTemplate.sol";
 
 contract GovernedIdentityTest is Test {
-    LawTemplates lawTemplates;
+    LawTemplate lawTemplate;
 
     address[] communityMembers = [
         address(1),
@@ -40,7 +40,16 @@ contract GovernedIdentityTest is Test {
     }
 
     function setUp() public {
-        lawTemplates = new LawTemplates(address(1));
+        lawTemplate = new LawTemplate(address(1));
+    }
+
+    function test_deployLawEmitsEvent() public { 
+        // £TODO
+        
+    }
+
+    function test_fallBackIsTriggeredWithIncorrectSelector() public { 
+        // £TODO
     }
 
     // OLD tests // 

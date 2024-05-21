@@ -11,7 +11,7 @@ import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
  * every vote counts once. 
  * This is often a the easiest way to vote when governance is divided by roles. 
  */
-abstract contract GovernorCountingSuperSimple is Governor {
+abstract contract GovernorCountingVoteSuperSimple is Governor {
     /**
      * @dev Supported vote types. Matches Governor Bravo ordering.
      */

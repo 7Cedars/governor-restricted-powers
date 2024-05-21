@@ -16,7 +16,8 @@ import { GovernorSettings } from "@openzeppelin/contracts/governance/extensions/
 import { GovernorStorage } from "@openzeppelin/contracts/governance/extensions/GovernorStorage.sol";
 import { GovernorVotes, IVotes } from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import { GovernorVotesQuorumFraction } from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import { GovernorDividedPowers } from "./GovernorDividedPowers.sol"; 
+import { GovernorRestrictedRoles } from "./GovernorRestrictedRoles.sol"; 
+import { GovernorCountingVoteSuperSimple } from "./GovernorCountingVoteSuperSimple.sol"; 
 
 // @custom:security-contact cedars7@proton.me
 contract GovernedIdentity is
@@ -25,7 +26,8 @@ contract GovernedIdentity is
     GovernorStorage,
     GovernorVotes,
     GovernorVotesQuorumFraction, 
-    GovernorDividedPowers
+    GovernorRestrictedRoles, 
+    GovernorCountingVoteSuperSimple
 {
     // role definitions. 
     // Note that it is also possible to set roles through the grantRole function. 
@@ -38,10 +40,8 @@ contract GovernedIdentity is
         GovernorSettings(7200, /* 1 day */ 50400, /* 1 week */ 0)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
-        GovernorDividedPowers(_initialAdmin)
+        GovernorRestrictedRoles(_initialAdmin)
     {}
-
-    // function callInternalLaw() public ( dataCall)
 
     // The following functions are overrides required by Solidity.
 
@@ -72,8 +72,18 @@ contract GovernedIdentity is
         bytes[] memory calldatas,
         string memory description,
         address proposer
-    ) internal override(Governor, GovernorStorage, GovernorDividedPowers) returns (uint256) {
+    ) internal override(Governor, GovernorStorage, GovernorRestrictedRoles) returns (uint256) {
         return super._propose(targets, values, calldatas, description, proposer);
+    }
+    
+    function _countVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        uint256 weight,
+        bytes memory params
+    ) internal virtual override (Governor, GovernorRestrictedRoles, GovernorCountingVoteSuperSimple) {
+        return super._countVote(proposalId, account, support, weight, params );
     }
 }
 

@@ -9,7 +9,7 @@ They are not proper tests (for instance, they miss asserts)
 import {Test, console} from "forge-std/Test.sol";
 import {CommunityToken} from "../../src/CommunityToken.sol";
 import {GovernedIdentity} from "../../src/GovernedIdentity.sol";
-import {LawTemplates} from "../../src/LawTemplates.sol";
+import {LawsPlayground} from "../../src/LawsPlayground.sol"; 
 
 contract GovernedIdentityTest is Test {
     /* events */
@@ -27,7 +27,7 @@ contract GovernedIdentityTest is Test {
 
     CommunityToken communityToken;
     GovernedIdentity governedIdentity;
-    LawTemplates lawTemplates;
+    LawsPlayground lawsPlayground; 
 
     address[] communityMembers = [
         address(1),
@@ -60,7 +60,7 @@ contract GovernedIdentityTest is Test {
 
     modifier createProposal() {
         address[] memory targets = new address[](1);
-        targets[0] = address(lawTemplates);
+        targets[0] = address(lawsPlayground);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -90,7 +90,7 @@ contract GovernedIdentityTest is Test {
     function setUp() public {
         communityToken = new CommunityToken();
         governedIdentity = new GovernedIdentity(communityToken, communityMembers[0]);
-        lawTemplates = new LawTemplates(address(governedIdentity));
+        lawsPlayground = new LawsPlayground(address(governedIdentity));
     }
 
     function test_checkStateProposal() public distributeAndDelegateCommunityTokens createProposal {
@@ -146,7 +146,7 @@ contract GovernedIdentityTest is Test {
 
         // call execute on suceeded proposal:
         address[] memory targets = new address[](1);
-        targets[0] = address(lawTemplates);
+        targets[0] = address(lawsPlayground);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -156,7 +156,7 @@ contract GovernedIdentityTest is Test {
 
         // check if target contract state has indeed breen changed.
         governedIdentity.execute(targets, values, calldatas, descriptionHash);
-        uint256 result = lawTemplates.freeStateVar();
+        uint256 result = lawsPlayground.freeStateVar();
 
         console.log("HELLO WORLD", result);
     }

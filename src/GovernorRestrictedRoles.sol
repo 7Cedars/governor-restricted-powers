@@ -1,21 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
-import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
-import { GovernorCountingSimple } from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-
-abstract contract GovernorDividedPowers is Governor, AccessManager, GovernorCountingSimple {
-  // needs to be immutable & part of constructor args when transforming this into extension. 
-
-  error GovernorDividedPowers__ProposalContainsUnauthorizedCalls(bytes[] calldatas);
-  error GovernorDividedPowers__ProposalContainsMultipleRoles(bytes[] calldatas);
-  error GovernorDividedPowers__UnauthorizedVote(uint256 proposalId); 
-
-  // additional mapping needed to keep track of role restriction of proposal. 
-  mapping(uint256 proposalId => uint64) private _proposalsRole;
-
-  // modifier to restrict who can propose and vote on proposals based on restriction of fucntion that proposal calls.  
+ // modifier to restrict who can propose and vote on proposals based on restriction of fucntion that proposal calls.  
   // notice the input. The function that get this modifier need to have these inputs. 
   // 1: function _propose
   // 2: NB function _castVote works with proposalId :D 
@@ -32,6 +18,22 @@ abstract contract GovernorDividedPowers is Governor, AccessManager, GovernorCoun
   // setRoleAdmin... 
   // etc: all functions related to admin and setting role. I have to deal with those. Should only be callable through external / governance functions 
 
+import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
+import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
+
+abstract contract GovernorRestrictedRoles is Governor, AccessManager {
+  // needs to be immutable & part of constructor args when transforming this into extension. 
+
+  error GovernorDividedPowers__ProposalContainsUnauthorizedCalls(bytes[] calldatas);
+  error GovernorDividedPowers__ProposalContainsMultipleRoles(bytes[] calldatas);
+  error GovernorDividedPowers__UnauthorizedVote(uint256 proposalId); 
+
+  // additional mapping needed to keep track of role restriction of proposal. 
+  mapping(uint256 proposalId => uint64) private _proposalsRole;
+
+  /**
+   * @param _initialAdmin account that is the initial admin of the governance system.   
+   */
   constructor(address _initialAdmin) AccessManager(_initialAdmin) {} 
 
   /**
@@ -41,6 +43,8 @@ abstract contract GovernorDividedPowers is Governor, AccessManager, GovernorCoun
    * 
    * Tricky think is that one proposal can call _multiple_ functions. How to deal with this? 
    * For now, the whole proposal fails. 
+   * 
+   * @dev I choose not to take proposal Id from function I override. It is inefficient, but the logic of the function becomes odd as a result. Felt unsafe. 
    *  
    */
   function _propose(
@@ -49,17 +53,13 @@ abstract contract GovernorDividedPowers is Governor, AccessManager, GovernorCoun
     bytes[] memory calldatas,
     string memory description,
     address proposer
-    ) internal override returns (uint256 proposalId) {
-      // Choose not to take proposal Id from function I override. 
-      // it is inefficient, but the logic of the function becomes odd as a result.
-      // felt unsafe. 
-      proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)));
-      // retrieving role related to first function called; 
+    ) internal override virtual returns (uint256 proposalId) {
+      proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description))); 
       bytes4 functionSelector = bytes4(calldatas[0]); 
       uint64 calldatasRole = getTargetFunctionRole(targets[0], functionSelector); 
 
       // Check 1: in case there are more than 1 calldatas slots, check if all have the same role restriction as function 0. 
-      // if not, everything reverts. 
+      // if not, revert everything
       if (calldatas.length > 1) {
         for (uint256 i = 1; i < calldatas.length; i++) {
           functionSelector = bytes4(calldatas[i]);
@@ -70,41 +70,39 @@ abstract contract GovernorDividedPowers is Governor, AccessManager, GovernorCoun
         }
       }
 
-      // check 2: does proposer have the correct role?  
+      // check 2: does proposer have the correct authenticated role?  
       (bool hasRole, ) = hasRole(calldatasRole, proposer);
       if (!hasRole) {
         revert GovernorDividedPowers__ProposalContainsUnauthorizedCalls(calldatas);
       } 
 
-      // if checks pass, the role restriction is linked to proposalId in a mapping..   
+      // if checks pass, the role restriction is linked to proposalId in the _proposalsRole mapping...   
       _proposalsRole[proposalId] = calldatasRole;
-      // .. and rest of propose function is called. 
+      // ...and the rest of propose function is called. 
       super._propose(targets, values, calldatas, description, proposer); 
 
-      return  proposalId; 
+      return proposalId; 
   } 
 
-  // adds check 
+  /**
+   * Add check to count vote.  
+   * 
+   * @dev this function is an override of the initial (empty) _countVote function in Governor.sol
+   * It still needs an additional extention to add the actual voting mechanism.
+   * GovernorCountingVoteSuperSimple.sol works well for this.   
+   */
   function _countVote(
     uint256 proposalId,
     address account,
-    uint8 support,
-    uint256 weight,
-    bytes memory params
-    ) internal virtual override (Governor, GovernorCountingSimple) {
-      // we get role restriction from proposalId
+    uint8 /* support */,
+    uint256 /* weight */,
+    bytes memory /* params */
+    ) internal virtual override (Governor) {
       uint64 restrictedToRole =  _proposalsRole[proposalId]; 
-      // and check if account has correct role assigned. 
       (bool hasRole, ) = hasRole(restrictedToRole, account);
-      // if not, revert.  
       if (!hasRole) {
         revert GovernorDividedPowers__UnauthorizedVote(proposalId); 
       }
-       // if it passed check, further execute _countVote function. 
-      super._countVote(proposalId, account, support, weight, params); 
-
   }
-
-
 
 }
