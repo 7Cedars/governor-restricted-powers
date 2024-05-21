@@ -13,7 +13,6 @@ pragma solidity ^0.8.20;
 
 import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
 import { GovernorSettings } from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
-import { GovernorCountingSimple } from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
 import { GovernorStorage } from "@openzeppelin/contracts/governance/extensions/GovernorStorage.sol";
 import { GovernorVotes, IVotes } from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import { GovernorVotesQuorumFraction } from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
@@ -23,7 +22,6 @@ import { GovernorDividedPowers } from "./GovernorDividedPowers.sol";
 contract GovernedIdentity is
     Governor,
     GovernorSettings,
-    GovernorCountingSimple,
     GovernorStorage,
     GovernorVotes,
     GovernorVotesQuorumFraction, 
@@ -74,7 +72,7 @@ contract GovernedIdentity is
         bytes[] memory calldatas,
         string memory description,
         address proposer
-    ) internal override(Governor, GovernorStorage) returns (uint256) {
+    ) internal override(Governor, GovernorStorage, GovernorDividedPowers) returns (uint256) {
         return super._propose(targets, values, calldatas, description, proposer);
     }
 }

@@ -3,18 +3,19 @@ pragma solidity ^0.8.20;
 
 // RBAC: Role Based Access Control.
 import {AccessManaged} from "@openzeppelin/contracts/access/manager/AccessManaged.sol";
+import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts//utils/structs/DoubleEndedQueue.sol";
 
 contract LawTemplates is AccessManaged {
     // See modifier onlyGovernance() below for explanation.  
-    using DoubleEndedQueue for DoubleEndedQueue.Bytes32Deque;
+    // using DoubleEndedQueue for DoubleEndedQueue.Bytes32Deque;
 
     /* Errors  */
     error GovernorOnlyExecutorOfLaw(address sender); 
 
     /* Type declarations */
     // See modifier onlyGovernance() below for explanation. 
-    DoubleEndedQueue.Bytes32Deque private _governanceCall;
+    // DoubleEndedQueue.Bytes32Deque private _governanceCall;
 
     /* State variables */
     uint256 public freeStateVar;
@@ -27,21 +28,18 @@ contract LawTemplates is AccessManaged {
     event FallbackTriggered(address indexed sender);
 
     /* Modifiers */
-    // This modifier is a copy of onlyGovernance in Governor.sol
-    // It is needed here to restrict certain laws to be only callable from governance process. 
-    // The second loop is necessary to check timelocked proposals.
+    // This modifier is a simplified version of the onlyGovernance modifier in Governor.sol.
+    // In this case, it just checks if calls are made from the Governor contract, ensuring they are called through a governance process. 
+    //  
     // for a detailed explanation, see governor.sol.  
     modifier onlyGovernance() {
         if (i_governor != _msgSender()) {
             revert GovernorOnlyExecutorOfLaw(_msgSender());
         }
-        if (i_governor != address(this)) {
-            bytes32 msgDataHash = keccak256(_msgData());
-            // loop until popping the expected operation - throw if deque is empty (operation not authorized)
-            while (_governanceCall.popFront() != msgDataHash) {}
-        }
         _;
     }
+
+     
 
     /* FUNCTIONS */
     /* constructor */
