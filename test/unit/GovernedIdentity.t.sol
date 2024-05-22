@@ -90,7 +90,7 @@ contract GovernedIdentityTest is Test {
     function setUp() public {
         communityToken = new CommunityTokenMock();
         governedIdentity = new GovernedIdentity(communityToken, communityMembers[0]);
-        lawsMock = new LawsMock(address(governedIdentity));
+        lawsMock = new LawsMock(payable(address(governedIdentity)));
     }
 
     function test_checkStateProposal() public distributeAndDelegateCommunityTokenMocks createProposal {

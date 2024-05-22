@@ -60,7 +60,7 @@ contract GovernorDividedPowersTest is Test {
     function setUp() public {
         communityTokenMock = new CommunityTokenMock();
         governedIdentity = new GovernedIdentity(communityTokenMock, communityMembers[0]);
-        lawsMock = new LawsMock(address(governedIdentity));
+        lawsMock = new LawsMock(payable(address(governedIdentity)));
     }
 
     function test_GovernorCanRewardRoles() public assignRoles {
@@ -100,7 +100,7 @@ contract GovernorDividedPowersTest is Test {
         // assert(restrictedLawBefore != restrictedLawAfter);
     }
 
-    // £todo I have to build these tests I think. Have fun :D 
+    // £todo I have to build these tests I think. Have fun :D
 
     function test_UnrestrictedFunctionCanBeCalledByAnyone() public {}
 
@@ -145,7 +145,6 @@ contract GovernorDividedPowersTest is Test {
     }
 
     // helper function to vote on and pass proposal for functions in LawsMock.sol.
-    // function voteAndPassProposal ... 
-    // £todo 
-
+    // function voteAndPassProposal ...
+    // £todo
 }

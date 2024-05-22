@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// Note: does not have receive function - laws are NOT payable.
-
 // RBAC: Role Based Access Control.
 import {AccessManaged} from "@openzeppelin/contracts/access/manager/AccessManaged.sol";
 import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
@@ -12,12 +10,11 @@ contract LawTemplate is AccessManaged {
     error GovernorOnly(address sender);
 
     /* State variables */
-    address private immutable i_governor;
+    address payable public immutable i_governor;
 
     /* Events */
     event LawsDeployed(address indexed governorContract);
     event LawTriggered(bytes32 indexed hashDescription, bool success);
-    event FallbackTriggered(address indexed sender);
 
     /* Modifiers */
     /**
@@ -34,16 +31,10 @@ contract LawTemplate is AccessManaged {
 
     /* FUNCTIONS */
     /* constructor */
-    constructor(address governor) AccessManaged(governor) {
+    constructor(address payable governor) AccessManaged(governor) {
         i_governor = governor;
 
         emit LawsDeployed(governor);
-    }
-
-    /* receive function (if exists) */
-    /* fallback function (if exists) */
-    fallback() external {
-        emit FallbackTriggered(msg.sender);
     }
 }
 

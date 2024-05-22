@@ -28,7 +28,7 @@ contract LawsMock is LawTemplate {
 
     /* FUNCTIONS */
     /* constructor */
-    constructor(address governor) LawTemplate(governor) {}
+    constructor(address payable governor) LawTemplate(governor) {}
 
     function unrestrictedLaw(uint256 _var) external {
         string memory description = "An unrestricted law that changes a state variable.";

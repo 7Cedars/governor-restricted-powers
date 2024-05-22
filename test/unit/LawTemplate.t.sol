@@ -40,7 +40,7 @@ contract GovernedIdentityTest is Test {
     }
 
     function setUp() public {
-        lawTemplate = new LawTemplate(address(1));
+        lawTemplate = new LawTemplate(payable(address(1)));
     }
 
     function test_deployLawEmitsEvent() public {
