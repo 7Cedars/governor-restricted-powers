@@ -7,9 +7,9 @@ They are not proper tests (for instance, they miss asserts)
 */
 
 import {Test, console} from "forge-std/Test.sol";
-import {CommunityToken} from "../../src/CommunityToken.sol";
 import {GovernedIdentity} from "../../src/GovernedIdentity.sol";
-import {LawsPlayground} from "../../src/LawsPlayground.sol"; 
+import {LawsMock} from "../mocks/LawsMock.sol";
+import {CommunityTokenMock} from "../mocks/CommunityTokenMock.sol";
 
 contract GovernedIdentityTest is Test {
     /* events */
@@ -25,9 +25,9 @@ contract GovernedIdentityTest is Test {
         string description
     );
 
-    CommunityToken communityToken;
+    CommunityTokenMock communityToken;
     GovernedIdentity governedIdentity;
-    LawsPlayground lawsPlayground; 
+    LawsMock lawsMock;
 
     address[] communityMembers = [
         address(1),
@@ -47,7 +47,7 @@ contract GovernedIdentityTest is Test {
     uint256 voteEnd = 691_201;
     uint256 proposedStateChange = 666666666666;
 
-    modifier distributeAndDelegateCommunityTokens() {
+    modifier distributeAndDelegateCommunityTokenMocks() {
         for (uint256 i; i < communityMembers.length; i++) {
             communityToken.awardIdentity(communityMembers[i]);
             // note: every member delegates to themselves.
@@ -60,7 +60,7 @@ contract GovernedIdentityTest is Test {
 
     modifier createProposal() {
         address[] memory targets = new address[](1);
-        targets[0] = address(lawsPlayground);
+        targets[0] = address(lawsMock);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -88,12 +88,12 @@ contract GovernedIdentityTest is Test {
     }
 
     function setUp() public {
-        communityToken = new CommunityToken();
+        communityToken = new CommunityTokenMock();
         governedIdentity = new GovernedIdentity(communityToken, communityMembers[0]);
-        lawsPlayground = new LawsPlayground(address(governedIdentity));
+        lawsMock = new LawsMock(address(governedIdentity));
     }
 
-    function test_checkStateProposal() public distributeAndDelegateCommunityTokens createProposal {
+    function test_checkStateProposal() public distributeAndDelegateCommunityTokenMocks createProposal {
         console.log("block number at start:", block.number);
 
         vm.roll(7_000);
@@ -109,7 +109,11 @@ contract GovernedIdentityTest is Test {
         console.log("state at block number 100_000 roll", block.number);
     }
 
-    function test_membersCanVoteProposalWithinTimeFrame() public distributeAndDelegateCommunityTokens createProposal {
+    function test_membersCanVoteProposalWithinTimeFrame()
+        public
+        distributeAndDelegateCommunityTokenMocks
+        createProposal
+    {
         uint8 vote = 1;
 
         vm.roll(10_000);
@@ -123,7 +127,11 @@ contract GovernedIdentityTest is Test {
         governedIdentity.castVote(proposalId, vote);
     }
 
-    function test_passedProposalCallsExternalFunction() public distributeAndDelegateCommunityTokens createProposal {
+    function test_passedProposalCallsExternalFunction()
+        public
+        distributeAndDelegateCommunityTokenMocks
+        createProposal
+    {
         uint256 numberOfYesVotes = 8;
         uint8 vote = 1;
 
@@ -146,7 +154,7 @@ contract GovernedIdentityTest is Test {
 
         // call execute on suceeded proposal:
         address[] memory targets = new address[](1);
-        targets[0] = address(lawsPlayground);
+        targets[0] = address(lawsMock);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -156,7 +164,7 @@ contract GovernedIdentityTest is Test {
 
         // check if target contract state has indeed breen changed.
         governedIdentity.execute(targets, values, calldatas, descriptionHash);
-        uint256 result = lawsPlayground.freeStateVar();
+        uint256 result = lawsMock.s_unrestrictedLaw();
 
         console.log("HELLO WORLD", result);
     }

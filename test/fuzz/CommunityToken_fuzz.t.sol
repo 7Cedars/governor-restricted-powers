@@ -2,19 +2,19 @@
 pragma solidity 0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
-import {CommunityToken} from "../../src/CommunityToken.sol";
+import {CommunityTokenMock} from "../mocks/CommunityTokenMock.sol";
 
 contract CommunityTokenTest is Test {
-    CommunityToken public communityToken;
+    CommunityTokenMock public communityTokenMock;
 
     function setUp() public {
-        communityToken = new CommunityToken();
+        communityTokenMock = new CommunityTokenMock();
     }
 
     function testFuzz_SetNumber(address member) public {
         if (member != address(0)) {
-            communityToken.awardIdentity(member);
-            assertEq(communityToken.balanceOf(member), 1);
+            communityTokenMock.awardIdentity(member);
+            assertEq(communityTokenMock.balanceOf(member), 1);
         }
     }
 }

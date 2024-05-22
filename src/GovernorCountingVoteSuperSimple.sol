@@ -3,13 +3,13 @@
 
 pragma solidity ^0.8.20;
 
-import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
+import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
 
 /**
  * @dev Extension of {Governor} for simple, 3 options, vote counting.
- * @dev this version is exact copy of GovernorCountingSimple, except that weights of votes are excluded. 
- * every vote counts once. 
- * This is often a the easiest way to vote when governance is divided by roles. 
+ * @dev this version is exact copy of GovernorCountingSimple, except that weights of votes are excluded.
+ * every vote counts once.
+ * This is often a the easiest way to vote when governance is divided by roles.
  */
 abstract contract GovernorCountingVoteSuperSimple is Governor {
     /**
@@ -48,9 +48,12 @@ abstract contract GovernorCountingVoteSuperSimple is Governor {
     /**
      * @dev Accessor to the internal vote counts.
      */
-    function proposalVotes(
-        uint256 proposalId
-    ) public view virtual returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) {
+    function proposalVotes(uint256 proposalId)
+        public
+        view
+        virtual
+        returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes)
+    {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.againstVotes, proposalVote.forVotes, proposalVote.abstainVotes);
     }
@@ -80,7 +83,7 @@ abstract contract GovernorCountingVoteSuperSimple is Governor {
         uint256 proposalId,
         address account,
         uint8 support,
-        uint256 /*weight */,
+        uint256, /*weight */
         bytes memory // params
     ) internal virtual override {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
@@ -90,7 +93,7 @@ abstract contract GovernorCountingVoteSuperSimple is Governor {
         }
         proposalVote.hasVoted[account] = true;
 
-        // Here weight is exlcuded.  
+        // Here weight is exlcuded.
         if (support == uint8(VoteType.Against)) {
             proposalVote.againstVotes += 1;
         } else if (support == uint8(VoteType.For)) {

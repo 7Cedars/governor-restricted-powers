@@ -11,13 +11,14 @@
 
 pragma solidity ^0.8.20;
 
-import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
-import { GovernorSettings } from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
-import { GovernorStorage } from "@openzeppelin/contracts/governance/extensions/GovernorStorage.sol";
-import { GovernorVotes, IVotes } from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
-import { GovernorVotesQuorumFraction } from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import { GovernorRestrictedRoles } from "./GovernorRestrictedRoles.sol"; 
-import { GovernorCountingVoteSuperSimple } from "./GovernorCountingVoteSuperSimple.sol"; 
+import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {GovernorSettings} from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
+import {GovernorStorage} from "@openzeppelin/contracts/governance/extensions/GovernorStorage.sol";
+import {GovernorVotes, IVotes} from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+import {GovernorVotesQuorumFraction} from
+    "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+import {GovernorRestrictedRoles} from "./GovernorRestrictedRoles.sol";
+import {GovernorCountingVoteSuperSimple} from "./GovernorCountingVoteSuperSimple.sol";
 
 // @custom:security-contact cedars7@proton.me
 contract GovernedIdentity is
@@ -25,15 +26,15 @@ contract GovernedIdentity is
     GovernorSettings,
     GovernorStorage,
     GovernorVotes,
-    GovernorVotesQuorumFraction, 
-    GovernorRestrictedRoles, 
+    GovernorVotesQuorumFraction,
+    GovernorRestrictedRoles,
     GovernorCountingVoteSuperSimple
 {
-    // role definitions. 
-    // Note that it is also possible to set roles through the grantRole function. 
-    uint64 public constant COUNCILLOR = 1; 
-    uint64 public constant JUDGE = 2; 
-    uint64 public constant CITIZEN = 3; 
+    // role definitions.
+    // Note that it is also possible to set roles through the grantRole function.
+    uint64 public constant COUNCILLOR = 1;
+    uint64 public constant JUDGE = 2;
+    uint64 public constant CITIZEN = 3;
 
     constructor(IVotes _token, address _initialAdmin)
         Governor("GovernedIdentity")
@@ -75,15 +76,13 @@ contract GovernedIdentity is
     ) internal override(Governor, GovernorStorage, GovernorRestrictedRoles) returns (uint256) {
         return super._propose(targets, values, calldatas, description, proposer);
     }
-    
-    function _countVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        uint256 weight,
-        bytes memory params
-    ) internal virtual override (Governor, GovernorRestrictedRoles, GovernorCountingVoteSuperSimple) {
-        return super._countVote(proposalId, account, support, weight, params );
+
+    function _countVote(uint256 proposalId, address account, uint8 support, uint256 weight, bytes memory params)
+        internal
+        virtual
+        override(Governor, GovernorRestrictedRoles, GovernorCountingVoteSuperSimple)
+    {
+        return super._countVote(proposalId, account, support, weight, params);
     }
 }
 

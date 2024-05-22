@@ -43,19 +43,18 @@ contract GovernedIdentityTest is Test {
         lawTemplate = new LawTemplate(address(1));
     }
 
-    function test_deployLawEmitsEvent() public { 
-        // £TODO
-        
-    }
-
-    function test_fallBackIsTriggeredWithIncorrectSelector() public { 
+    function test_deployLawEmitsEvent() public {
         // £TODO
     }
 
-    // OLD tests // 
-    
+    function test_fallBackIsTriggeredWithIncorrectSelector() public {
+        // £TODO
+    }
+
+    // OLD tests //
+
     // function test_helloWorldRestrictedRevertsIfNotCalledByCouncillor() public awardRoles {
-    //     uint256 _var = 222; 
+    //     uint256 _var = 222;
 
     //     vm.expectRevert();
     //     vm.prank(communityMembers[8]);
@@ -68,11 +67,11 @@ contract GovernedIdentityTest is Test {
     //   vm.prank(communityMembers[2]);
     //   (bool success, bytes32 hashDescription) = lawTemplates.helloWorldRestricted(_var);
 
-    //   vm.assertEq(lawTemplates.restrictedStateVar(), _var);  
+    //   vm.assertEq(lawTemplates.restrictedStateVar(), _var);
     // }
 
     // function test_queryingPriviledgedAccounts() public awardRoles {
     //   lawTemplates
 
-    // } 
+    // }
 }

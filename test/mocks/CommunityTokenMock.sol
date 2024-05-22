@@ -8,7 +8,7 @@ import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-contract CommunityToken is ERC721, EIP712, ERC721Votes {
+contract CommunityTokenMock is ERC721, EIP712, ERC721Votes {
     uint256 private _nextTokenId;
 
     constructor() ERC721("CommunityToken", "TID") EIP712("MyToken", "1") {}
