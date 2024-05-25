@@ -1,10 +1,8 @@
-
-
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.24;
 
-import {GovernedIdentity} from "../../../src/example-governance-system/GovernedIdentity.sol";
-import {LawTemplate} from "../../../src/example-laws/LawTemplate.sol";
+import {GovernedIdentity} from "../../src/example-governance-system/GovernedIdentity.sol";
+import {LawTemplate} from "../../src/example-laws/LawTemplate.sol";
 
 /**
  * @title Example Public Laws, to be used in combination with the GovernorRestrictedRoles extension of Governor.sol.
@@ -23,18 +21,17 @@ contract LawsPublic is LawTemplate {
     /* FUNCTIONS */
     /* constructor */
     constructor(address payable governedIdentity) LawTemplate(governedIdentity) {}
-  
-  // role restriction: CITIZEN
-  // function: mint 1 token - should not be possible to transfer.  
 
-  // role restriction: COUNCILLOR 
-  // function: citizenIsNotUnique => cancel citizenship + burn token. 
+    // role restriction: CITIZEN
+    // function: mint 1 token - should not be possible to transfer.
 
-  // role restriction: COUNCILLOR 
-  // function: citizenIsNotHuman => cancel citizenship + burn token. 
+    // role restriction: COUNCILLOR
+    // function: citizenIsNotUnique => cancel citizenship + burn token.
 
-  // function: internal law to revoke citizenship + burn token
+    // role restriction: COUNCILLOR
+    // function: citizenIsNotHuman => cancel citizenship + burn token.
 
+    // function: internal law to revoke citizenship + burn token
 }
 
 // Structure contract // -- from Patrick Collins.

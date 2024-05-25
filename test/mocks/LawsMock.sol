@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 // RBAC: Role Based Access Control.
 import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
-import {LawTemplate} from "../../src/LawTemplate.sol";
+import {LawTemplate} from "../../src/example-laws/LawTemplate.sol";
 
 /**
  * @title Mock Laws for testing

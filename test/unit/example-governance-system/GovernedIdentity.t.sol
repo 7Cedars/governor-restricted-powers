@@ -64,8 +64,8 @@ contract GovernedIdentityTest is Test {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = (abi.encodeWithSignature("helloWorld(uint256)", proposedStateChange));
-        string memory description = "this is a hellowWorld proposal";
+        calldatas[0] = (abi.encodeWithSignature("unrestrictedGovernedLaw(uint256)", proposedStateChange));
+        string memory description = "this is a hello world proposal, to a restricted and governed law.";
 
         proposalId = governedIdentity.hashProposal(targets, values, calldatas, keccak256(bytes(description)));
 
@@ -158,8 +158,8 @@ contract GovernedIdentityTest is Test {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = (abi.encodeWithSignature("helloWorld(uint256)", proposedStateChange));
-        string memory description = "this is a hellowWorld proposal";
+        calldatas[0] = (abi.encodeWithSignature("unrestrictedGovernedLaw(uint256)", proposedStateChange));
+        string memory description = "this is a hello world proposal, to a restricted and governed law.";
         bytes32 descriptionHash = keccak256(bytes(description));
 
         // check if target contract state has indeed breen changed.

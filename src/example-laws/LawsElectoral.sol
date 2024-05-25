@@ -2,19 +2,19 @@
 pragma solidity 0.8.24;
 
 // £info RBAC: Role Based Access Control.
-import {GovernedIdentity} from "../../../src/example-governance-system/GovernedIdentity.sol";
-import {LawTemplate} from "../../../src/example-laws/LawTemplate.sol";
+import {GovernedIdentity} from "../../src/example-governance-system/GovernedIdentity.sol";
+import {LawTemplate} from "../../src/example-laws/LawTemplate.sol";
 
 /**
  * @title Example Electoral Laws, to be used in combination with the GovernorRestrictedRoles extension of Governor.sol.
  *
  * @author Seven Cedars
  *
- * @notice Elector laws elect (or select) accounts to roles. 
+ * @notice Elector laws elect (or select) accounts to roles.
  * This means the elector law contract needs to be designated ADMIN_ROLE() in the governor contract.
- * This is particular to electoral laws and a reason to place them in a separate contract. 
- *  
- * As such, be _very_ careful in writing these functions.    
+ * This is particular to electoral laws and a reason to place them in a separate contract.
+ *
+ * As such, be _very_ careful in writing these functions.
  *
  * £todo: check gas usage of string descriptions. How bad is it?
  */
@@ -138,12 +138,12 @@ contract LawsElectoral is LawTemplate {
         emit LawTriggered(keccak256(bytes(description)), true);
     }
 
-    // authorised role => JUDGE 
+    // authorised role => JUDGE
     function electJudgeByJudges() external restricted onlyGovernance {
         // £todo
     }
 
-    // authorised role => COUNCILLOR 
+    // authorised role => COUNCILLOR
     function electJudgeByCouncillors() external restricted onlyGovernance {
         // £todo
     }
