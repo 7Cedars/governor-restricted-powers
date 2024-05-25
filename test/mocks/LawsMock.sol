@@ -23,8 +23,9 @@ contract LawsMock is LawTemplate {
     // £q: I think it is bet practice to keep state variables always in the same contract as the laws. -- avoid reentrancy attack vector.
     uint256 public s_unrestrictedLaw;
     uint256 public s_restrictedLaw;
-    uint256 public s_restrictedGovernedLaw;
     uint256 public s_unrestrictedGovernedLaw;
+    uint256 public s_restrictedGovernedLaw;
+    
 
     /* FUNCTIONS */
     /* constructor */

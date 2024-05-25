@@ -3,7 +3,6 @@ pragma solidity 0.8.24;
 
 /**
  * NB: this test file is to test and try out functionality of the GovernorDividedPowers extension to Openzeppelin's Governor contract.
- * They are often not proper tests (for instance, many miss asserts)
  *
  * £todo : check how guardian playes with all of this..
  */
@@ -20,14 +19,14 @@ contract GovernorRestrictedRolesTest is Test {
     GovernedIdentity governedIdentity;
     CommunityTokenMock communityTokenMock;
 
-    address[] communityMembers = new address[](100);
+    address[] communityMembers = new address[](100); // we create a community of a hundred members. 
 
     event LawTriggered(bytes32 indexed hashDescription, bool success);
 
     modifier assignRoles() {
-        uint256 percentageCitizens = 100;
-        uint256 percentageCouncillors = 10;
-        uint256 percentageJudges = 5;
+        uint256 percentageCitizens = 100; // every member is a citizen. 
+        uint256 percentageCouncillors = 10; // every 10th member is a councillor. 
+        uint256 percentageJudges = 5; // every 20th member is a judge. 
 
         vm.startPrank(communityMembers[0]);
         for (uint160 i = 1; i < communityMembers.length; i++) {
@@ -45,6 +44,18 @@ contract GovernorRestrictedRolesTest is Test {
 
         _;
     }
+
+    modifier distributeAndDelegateCommunityToken() {
+        for (uint256 i; i < communityMembers.length; i++) {
+            communityTokenMock.awardIdentity(communityMembers[i]);
+            // note: every member delegates to themselves.
+            vm.prank(communityMembers[i]);
+            communityTokenMock.delegate(communityMembers[i]);
+        }
+
+        _;
+    }
+
 
     modifier restrictFunctions() {
         bytes4[] memory selectorsRolesCouncillor = new bytes4[](1);
@@ -66,7 +77,7 @@ contract GovernorRestrictedRolesTest is Test {
 
     function setUp() public {
         for (uint160 i; i < communityMembers.length; i++) {
-            communityMembers[i] = address(i + 12345);
+            communityMembers[i] = address(i + 12345); // avoiding address(0); 
         }
 
         communityTokenMock = new CommunityTokenMock();
@@ -168,9 +179,70 @@ contract GovernorRestrictedRolesTest is Test {
     }
 
     // £todo I have to build these tests I think. Have fun :D
-    function test_GovernedFunctionSucceedsWithProposalCall() public {}
+    function test_GovernedFunctionSucceedsWithProposalCall() public assignRoles restrictFunctions {
+        uint256 proposedStateChange = 123456;
+        bytes memory dataCall= abi.encodeWithSignature("unrestrictedGovernedLaw(uint256)", proposedStateChange); 
+        string memory proposalDescription = "This is a test proposal."; 
 
-    function test_GovernedRestrictedFunctionRevertsWithUnauthorisedProposalCall() public {}
+        // create & pass proposal. 
+        uint256 proposalId = createProposal(1, dataCall, proposalDescription);
+        succeedProposal(proposalId, governedIdentity.PUBLIC_ROLE());
+        vm.roll(block.timestamp + 60_000);
+        
+        // call execute on suceeded proposal:
+        address[] memory targets = new address[](1);
+        targets[0] = address(lawsMock);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = dataCall; 
+        bytes32 descriptionHash = keccak256(bytes(proposalDescription));
+        governedIdentity.execute(targets, values, calldatas, descriptionHash);
+
+        vm.assertEq(lawsMock.s_unrestrictedGovernedLaw(), proposedStateChange);
+    }
+
+    function test_GovernedRestrictedFunctionRevertsWithUnauthorisedProposalCall() public assignRoles restrictFunctions {
+        uint256 proposedStateChange = 123456;
+        bytes memory dataCall= abi.encodeWithSignature("restrictedGovernedLaw(uint256)", proposedStateChange); 
+        string memory proposalDescription = "This is a test proposal."; 
+
+        uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
+        console.log("ROLE: ", role); 
+
+        // create & pass proposal. 
+        uint256 proposalId = createProposal(
+            20, // Every 10th community member is councillor. The restrictedGovernedLaw function can be called by Councillor role. 
+            dataCall, 
+            proposalDescription
+            );
+        succeedProposal(proposalId, governedIdentity.JUDGE());
+
+        //  0x79ba2b3b
+        
+
+        vm.roll(block.number + 60_000);
+        
+        // CONTINUE HERE 
+        // NB: Execute fails because the GovernedIdentity contract has not been whitelisted. 
+        // This is the type of behaviour I really do not want. It is caused by the law rol being positioned in an external contract and being called with call; not delegatcall. 
+        // but using delegateCall will really open up a can of worms when it comes to security...  
+        // It needs to be restricted by specific role. how do I fix this? 
+        // call execute on suceeded proposal: 
+        address[] memory targets = new address[](1);
+        targets[0] = address(lawsMock);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = dataCall; 
+        bytes32 descriptionHash = keccak256(bytes(proposalDescription));
+
+        vm.prank(communityMembers[10]);
+        governedIdentity.execute(targets, values, calldatas, descriptionHash);
+
+
+        // vm.assertEq(lawsMock.s_restrictedGovernedLaw(), proposedStateChange);
+    }
 
     function test_GovernedRestrictedFunctionRevertsWithAuthorisedDirectCall() public {}
 
@@ -194,36 +266,45 @@ contract GovernorRestrictedRolesTest is Test {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = dataCall; // (abi.encodeWithSignature("helloWorld(uint256)", proposedStateChange));
+        calldatas[0] = dataCall; 
+        
+        bytes4 functionSelector = bytes4(calldatas[0]);
+        uint64 calldatasRole = governedIdentity.getTargetFunctionRole(targets[0], functionSelector);
+        console.log("calldatasRole: ", calldatasRole); 
 
         vm.prank(communityMembers[memberIndex]);
         proposalId = governedIdentity.propose(targets, values, calldatas, proposalDescription);
     }
 
-    // function succeedProposal(uint256 proposalId)
-    //     internal
-    // {
-    //     uint8 voteFor = 1;
+    function succeedProposal(uint256 proposalId, uint64 RoleRestriction)
+         internal distributeAndDelegateCommunityToken
+     {
+        uint8 vote = 1; // vote in favor
+        vm.roll(block.number + 10_000);
 
-    //     address[] memory targets = new address[](1);
-    //     targets[0] = address(lawsMock);
-    //     uint256[] memory values = new uint256[](1);
-    //     values[0] = 0;
-    //     bytes[] memory calldatas = new bytes[](1);
-    //     calldatas[0] = dataCall; // (abi.encodeWithSignature("helloWorld(uint256)", proposedStateChange));
+        // everyone that is allowed to vote, votes in favor. 
+        for (uint256 i; i < communityMembers.length; i++) {
+            (bool hasRole , ) = governedIdentity.hasRole(RoleRestriction, communityMembers[i]); 
+            if (hasRole) {
+                vm.prank(communityMembers[i]);
+                governedIdentity.castVote(proposalId, vote);
+            } 
+        }
+    }
 
-    //     vm.prank(communityMembers[memberIndex]);
-    //     governedIdentity.castVote(proposalId, vote);
+    function failProposal(uint256 proposalId, uint64 RoleRestriction)
+         internal distributeAndDelegateCommunityToken
+     {
+        uint8 vote = 0; // vote against
+        vm.roll(block.number + 10_000);
 
-    // }
-
-    // function failProposal(uint256 proposalId)
-    //     internal
-    // {
-    //     uint8 voteAgainst = 0;
-    // }
-
-    // helper function to vote on and pass proposal for functions in LawsMock.sol.
-    // function voteAndPassProposal ...
-    // £todo
+        // everyone that is allowed to vote, votes against. 
+        for (uint256 i; i < communityMembers.length; i++) {
+            (bool hasRole , ) = governedIdentity.hasRole(RoleRestriction, communityMembers[i]); 
+            if (hasRole) {
+                vm.prank(communityMembers[i]);
+                governedIdentity.castVote(proposalId, vote);
+            } 
+        }
+    }
 }

@@ -72,7 +72,10 @@ abstract contract GovernorRestrictedRoles is Governor, AccessManager {
 
         // check 2: does proposer have the correct authenticated role?
         (bool hasRole,) = hasRole(calldatasRole, proposer);
-        if (!hasRole) {
+        if (
+            calldatasRole != 0 && // if function does not have role restriction, getTargetFunctionRole returns 0. 
+            !hasRole) 
+            {
             revert GovernorDividedPowers__ProposalContainsUnauthorizedCalls(calldatas);
         }
 
