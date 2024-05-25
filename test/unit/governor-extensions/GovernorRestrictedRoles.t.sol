@@ -8,11 +8,11 @@ pragma solidity 0.8.24;
  * £todo : check how guardian playes with all of this..
  */
 import {Test, console} from "forge-std/Test.sol";
-import {GovernedIdentity} from "../../src/GovernedIdentity.sol";
-import {LawTemplate} from "../../src/LawTemplate.sol";
-import {GovernorRestrictedRoles} from "../../src/GovernorRestrictedRoles.sol";
-import {LawsMock} from "../mocks/LawsMock.sol";
-import {CommunityTokenMock} from "../mocks/CommunityTokenMock.sol";
+import {GovernedIdentity} from "../../../src/example-governance-system/GovernedIdentity.sol";
+import {LawTemplate} from "../../../src/example-laws/LawTemplate.sol";
+import {GovernorRestrictedRoles} from "../../../src/governor-extensions/GovernorRestrictedRoles.sol";
+import {LawsMock} from "../../mocks/LawsMock.sol";
+import {CommunityTokenMock} from "../../mocks/CommunityTokenMock.sol";
 
 contract GovernorDividedPowersTest is Test {
     LawTemplate lawTemplate;
@@ -102,7 +102,9 @@ contract GovernorDividedPowersTest is Test {
 
     // £todo I have to build these tests I think. Have fun :D
 
-    function test_UnrestrictedFunctionCanBeCalledByAnyone() public {}
+    function test_UnrestrictedFunctionCanBeCalledByAnyone() public {
+        
+    }
 
     function test_SuccesfulCallEmitsCorrectEvent() public {}
 

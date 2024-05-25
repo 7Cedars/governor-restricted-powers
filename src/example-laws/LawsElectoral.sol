@@ -2,8 +2,8 @@
 pragma solidity 0.8.24;
 
 // £info RBAC: Role Based Access Control.
-import {GovernedIdentity} from "../../src/GovernedIdentity.sol";
-import {LawTemplate} from "../../src/LawTemplate.sol";
+import {GovernedIdentity} from "../../../src/example-governance-system/GovernedIdentity.sol";
+import {LawTemplate} from "../../../src/example-laws/LawTemplate.sol";
 
 /**
  * @title Example Electoral Laws, to be used in combination with the GovernorRestrictedRoles extension of Governor.sol.

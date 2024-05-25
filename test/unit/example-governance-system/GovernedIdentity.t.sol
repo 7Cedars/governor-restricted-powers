@@ -7,9 +7,9 @@ They are not proper tests (for instance, they miss asserts)
 */
 
 import {Test, console} from "forge-std/Test.sol";
-import {GovernedIdentity} from "../../src/GovernedIdentity.sol";
-import {LawsMock} from "../mocks/LawsMock.sol";
-import {CommunityTokenMock} from "../mocks/CommunityTokenMock.sol";
+import {GovernedIdentity} from "../../../src/example-governance-system/GovernedIdentity.sol";
+import {LawsMock} from "../../mocks/LawsMock.sol";
+import {CommunityTokenMock} from "../../mocks/CommunityTokenMock.sol";
 
 contract GovernedIdentityTest is Test {
     /* events */

@@ -8,7 +8,7 @@ pragma solidity 0.8.24;
  *
  */
 import {Test, console} from "forge-std/Test.sol";
-import {LawTemplate} from "../../src/LawTemplate.sol";
+import {LawTemplate} from "../../../src/example-laws/LawTemplate.sol";
 
 contract GovernedIdentityTest is Test {
     LawTemplate lawTemplate;

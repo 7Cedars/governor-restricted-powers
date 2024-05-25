@@ -17,8 +17,8 @@ import {GovernorStorage} from "@openzeppelin/contracts/governance/extensions/Gov
 import {GovernorVotes, IVotes} from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import {GovernorVotesQuorumFraction} from
     "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {GovernorRestrictedRoles} from "./GovernorRestrictedRoles.sol";
-import {GovernorCountingVoteSuperSimple} from "./GovernorCountingVoteSuperSimple.sol";
+import {GovernorRestrictedRoles} from "../governor-extensions/GovernorRestrictedRoles.sol";
+import {GovernorCountingVoteSuperSimple} from "../governor-extensions/GovernorCountingVoteSuperSimple.sol";
 
 // @custom:security-contact cedars7@proton.me
 contract GovernedIdentity is

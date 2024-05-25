@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.24;
 
-import {GovernedIdentity} from "../../src/GovernedIdentity.sol";
-import {LawTemplate} from "../../src/LawTemplate.sol";
+import {GovernedIdentity} from "../../../src/example-governance-system/GovernedIdentity.sol";
+import {LawTemplate} from "../../../src/example-laws/LawTemplate.sol";
 
 /**
  * @title Example Public Laws, to be used in combination with the GovernorRestrictedRoles extension of Governor.sol.
