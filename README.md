@@ -23,10 +23,10 @@
 <br />
 <div align="center">
   <a href="https://github.com/7Cedars/loyalty-program-contracts"> 
-    <img src="public/logo.png" alt="Logo" width="80" height="80">
+    <img src="public/logo.png" alt="Logo" width="500" height="500">
   </a>
 
-<h3 align="center">Governor Divided Powers: Introducing separation of powers to OpenZeppelin's Governor Contract </h3>
+<h3 align="center">Governor Separated Powers: Introducing separation of powers to OpenZeppelin's Governor Contract </h3>
 
   <p align="center">
     An extension that introduces OpenZeppelin's AccessControl restrictions to the governance processes of Governor derived contracts. 
@@ -35,7 +35,7 @@
     <br />
     <br />
     <!--NB: TO DO --> 
-    <a href="https://loyalty-program-psi.vercel.app">View Demo of a dApp interacting with the protocol.</a>
+    <a href="https://loyalty-program-psi.vercel.app">View an example contract on [sepolia.etherscan.io](https://sepolia.etherscan.io/).</a>
     ·
     <a href="https://github.com/7Cedars/loyalty-program-contracts/issues">Report Bug</a>
     ·
@@ -174,9 +174,8 @@ To get a local copy up and running do the following.
 <!-- ROADMAP -->
 ## Known Issues 
 
-- [ ] Further develop testing. Basic unit, integration and invariant tests have been implemented, but fuzz tests not yet. Test coverage is only around 50 percent.  
-- [ ] Implement deployment to multiple testnets. 
-- [ ] ... 
+- [ ] This protocol is under active development. Basic functionality is barely implemented. 
+- [ ] 
 
 See the [open issues](https://github.com/7Cedars/loyalty-program-contracts/issues) for a full list of proposed features (and known issues).
 
