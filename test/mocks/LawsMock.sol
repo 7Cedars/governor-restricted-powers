@@ -10,7 +10,7 @@ import {LawTemplate} from "../../src/example-laws/LawTemplate.sol";
  *
  * @author Seven Cedars
  *
- * @notice These is a collection of different types of laws/functions that can be used with the GovernorRestrictedRoles extension.
+ * @notice These is a collection of different types of laws/functions that can be used with the GovernorDividedPowers extension.
  * It also gives a general sense of some best practices for law contracts.
  *
  * @dev the role allocation of restricted laws is not decided in this contract: it is set at the Governor contract.

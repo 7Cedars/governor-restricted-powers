@@ -1,6 +1,7 @@
 <!--
 *** NB: This template was taken from: https://github.com/othneildrew/Best-README-Template/blob/master/README.md?plain=1 
 *** For shields, see: https://shields.io/
+*** if was further adapted for solidity along example from https://github.com/Cyfrin/6-thunder-loan-audit
 -->
 <a name="readme-top"></a>
 
@@ -22,13 +23,13 @@
 <br />
 <div align="center">
   <a href="https://github.com/7Cedars/loyalty-program-contracts"> 
-    <img src="public/iconLoyaltyProgram.png" alt="Logo" width="80" height="80">
+    <img src="public/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-<h3 align="center">Loyal: A Solidity Protocol for Web3 Customer Engagement Programs</h3>
+<h3 align="center">Governor Divided Powers: Introducing separation of powers to OpenZeppelin's Governor Contract </h3>
 
   <p align="center">
-    A composable, lightweight and fully open source solidity protocol build for real-world customer engagment. 
+    An extension that introduces OpenZeppelin's AccessControl restrictions to the governance processes of Governor derived contracts. 
     <br />
     <a href="https://github.com/7Cedars/loyalty-program-contracts"><strong>Explore the docs »</strong></a>
     <br />
@@ -47,7 +48,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-the-project">About The Project</a>
+      <a href="#about">About</a>
       <ul>
         <li><a href="#built-with">Built With</a></li>
       </ul>
@@ -71,34 +72,53 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
-A fully open source solidity protocol for real-world customer engagment.
+## About
+The extension restricts access to governance processes along restricted roles. 
 
-This protocol sets out a standard for loyalty programs: ERC-1155 based contracts that mint (fungible) points and (non-fungible) loyalty cards.
-Loyalty Cards are implemented as ERC-6551 Token Based Accounts that accumulate loyalty points. 
-See [this repository](https://github.com/7Cedars/loyalty-program-contracts) for an example implementation. 
+It does this by relating the `AccessControl` to the `Governor contract` by restricting who can propose, vote on and execute proposals along the access control of an external function.
 
-Loyalty programs interact with a second protocol that sets out a standard for contracts - loyalty gift contracts - that exchange points for gifts or vouchers.
-For this protocol, see [this repository](https://github.com/7Cedars/loyalty-gifts-contracts) for example implementations.
+Why do this?
+- It enables the separation of powers in a DAO along various roles.
+- This in turn enables the creation of checks and balances between these roles.
+- This is a tried and true approach to safeguarding decentralisation of (social, political and economic) assets in light of their tendency to centralise around informal elites.
 
-Crucially, interactions between the two protocols are bounded: points and vouchers that are minted by a loyalty program can only be used among its own loyalty cards. 
-Loyalty cards themselves are freely transferable.
+How does it work? 
+- It has to be used with an additional contract that consists of functions that are set as `restricted` and, optionally, set as `onlyGovernance`.
+- Proposing, voting and executing proposals always happen in relation to calling these external restricted function.
+- The governance process is restricted along the role restrictions of these external functions. 
+- For example: When an external function is restricted to `JUDGE_ROLE`, then it is only possible for those holding the `JUDGE_ROLE` to propose, vote on and execute proposals related to this fucntion. 
 
 See the following schema for more detail:
+<!-- NB! TODO -->
 
   <a href="https://github.com/7Cedars/loyalty-program-contracts/blob/master/public/PoCModularLoyaltyProgram.png"> 
     <img src="public/PoCModularLoyaltyProgram.png" alt="Schema Protocol" width="100%" height="100%">
   </a>
 
+### Important files and folders
+All solidity contracts can be found in the `src` folder. The folder consists of the following subfolders and files. 
+
+governor-extensions
+- `GovernorDividedPowers.sol`: the extension to OpenZeppelin's `governor` contract. Overrides the `_propose`, `_countVote` and `_executeOperations` functions. It aims to keep breaking changes to other extensions to a minimum. 
+- `GovernorCountingVoteSuperSimple.sol`: An adaptation of the `GovernorCountingVoteSimple.sol` contract that is included in `governor.sol`. This counting contract does not take delegate weights into consideration. It is especially useful whenever votes among role holders (for instance council members or judges) should _not_ depent on voting power.  
+
+example-laws
+- `LawTemplate.sol`: A base contract for functions to use with `GovernorDividedPowers.sol`. Needs to be inherited by contracts that will be called by the `Governor` contract.  
+- `LawsAdministrative.sol`: Example function that regulate checks and balances between roles. These all take proposalId from other roles as input variables, to allow their decisions to be checked by a secondary role. IRL, these are called administrative laws.  
+- `LawsElectoral.sol`: Example functions for the selection and deselection of accounts to specific roles. Although often not involving a democratic election, these are laws that 'elect' accounts to particular roles. 
+- `LawsPublic.sol`: These are any kind of function that does not fall into the electoral or administratice bracket. They are usually functions that guide the functioning of the DAO and related smart contracts. 
+
+example-governance-system
+- `GovernedIdentity.sol`: An example implementation of the `GovernorDividedPowers.sol` extension. It builds on the contracts from the `governor-extension` and `example-laws` folders. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Built With
 <!-- See for a list of badges: https://github.com/Envoy-VC/awesome-badges -->
 <!-- * [![React][React.js]][React-url]  -->
-* Solidity 0.8.19
+* Solidity 0.8.24
 * Foundry 0.2.0
-* OpenZeppelin 5.0
+* OpenZeppelin 5.0.2
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -110,59 +130,49 @@ To get a local copy up and running do the following.
 
 ### Prerequisites
 
-  Install Foundry
-  ```sh
-  $ curl -L https://foundry.paradigm.xyz | bash
-  ```
+- [Install git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+  - You'll know you did it right if you can run `git --version` and you see a response like `git version x.x.x`
+- [Install foundry](https://getfoundry.sh/)
+  - You'll know you did it right if you can run `forge --version` and you see a response like `forge 0.2.0 (816e00b 2023-03-16T00:05:26.396218Z)`
 
-  ```sh
-  $ foundryup
-  ```
-
-  Check if the chain has an ERC-6551 registry at address 0x000000006551c19487814612e58FE06813775758.
-  If not (and if the contract is deployed on a local chain), set up a registry following the steps at [tokenbound.org](https://docs.tokenbound.org/guides/deploy-registry). 
 
 ### Clone the repository
 <!-- NB: I have to actually follow these steps and check if I missed anyting £todo -->
 
-1. Get a free alchemy API Key at [alchemy.com](https://docs.alchemy.com/docs/alchemy-quickstart-guide)
-2. Clone the repo
-  ```sh
-   git clone https://github.com/7Cedars/loyalty-program-contracts.git
+1. Clone the repo
+   ```sh
+   git clone https://github.com/7Cedars/governor-restricted-powers
    ```
-3. Install packages
-  ```sh
-   yarn add
-   ```
+
+2. Run make
+   ```sh
+   cd governor-restricted-powers
+   make
+   ``` 
 
 ### Run the test and build the contracts
-4. Run tests
-  ```sh
-  $ forge test
-   ```
-5. Build contracts
-  ```sh
-   $ forge build
+3. Run tests
+    ```sh
+    forge test
+    ```
+
+4. Build contracts
+    ```sh
+   forge build
    ```
 
+<!--  
 ### Deploy
-6. Run deploy script at an EVM compatible Chain
+5. Run deploy script at an EVM compatible Chain
   ```sh
-   $ forge script --fork-url <RPC_URL> script/DeployLoyaltyProgram.s.sol --broadcast
+   $ forge script --fork-url <RPC_URL> script/NOT_IMPLEMENTED_YET --broadcast
    ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-<!-- USAGE EXAMPLES -->
-## Usage
-A front-end dApp demonstration of this web3 protocol has been deployed on vercel.com. 
-Try it out at [https://loyalty-program-psi.vercel.app/](https://loyalty-program-psi.vercel.app/). 
+-->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
-## Roadmap
+## Known Issues 
 
 - [ ] Further develop testing. Basic unit, integration and invariant tests have been implemented, but fuzz tests not yet. Test coverage is only around 50 percent.  
 - [ ] Implement deployment to multiple testnets. 
@@ -208,11 +218,9 @@ GitHub profile [https://github.com/7Cedars](https://github.com/7Cedars)
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
-* This project was build while following [PatrickCollins](https://www.youtube.com/watch?v=wUjYK5gwNZs&t) amazing Learn Solidity, Blockchain Development, & Smart Contracts Youtube course. Comes highly recommended for anyone wanting to get into Foundry & intermediate/advanced solidity coding. 
-* An [introduction to ERC-6551](https://www.youtube.com/watch?v=GLTVd5P5LCw) by Pinata's Kelly Kim was really useful. 
-* As was the documentation from [Tokenbound](https://docs.tokenbound.org/) (an organisation advocating the implementation of Tokan Based Accounts). 
-* I took the template for the readme file from [Drew Othneil](https://github.com/othneildrew/Best-README-Template/blob/master/README.md?plain=1). 
-* And a special thanks should go out to [SpeedRunEthereum](https://speedrunethereum.com/) and [LearnWeb3](https://learnweb3.io/) for providing the first introductions to solidity coding. 
+* Patrick Collins
+* OpenZeppelin.
+* ...  
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

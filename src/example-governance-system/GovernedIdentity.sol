@@ -17,7 +17,7 @@ import {GovernorStorage} from "@openzeppelin/contracts/governance/extensions/Gov
 import {GovernorVotes, IVotes} from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import {GovernorVotesQuorumFraction} from
     "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {GovernorRestrictedRoles} from "../governor-extensions/GovernorRestrictedRoles.sol";
+import {GovernorDividedPowers} from "../governor-extensions/GovernorDividedPowers.sol";
 import {GovernorCountingVoteSuperSimple} from "../governor-extensions/GovernorCountingVoteSuperSimple.sol";
 
 // @custom:security-contact cedars7@proton.me
@@ -27,7 +27,7 @@ contract GovernedIdentity is
     GovernorStorage,
     GovernorVotes,
     GovernorVotesQuorumFraction,
-    GovernorRestrictedRoles,
+    GovernorDividedPowers,
     GovernorCountingVoteSuperSimple
 {
     // role definitions.
@@ -41,7 +41,7 @@ contract GovernedIdentity is
         GovernorSettings(7200, /* 1 day */ 50400, /* 1 week */ 0)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
-        GovernorRestrictedRoles(_initialAdmin)
+        GovernorDividedPowers(_initialAdmin)
     {}
 
     // The following functions are overrides required by Solidity.
@@ -73,14 +73,14 @@ contract GovernedIdentity is
         bytes[] memory calldatas,
         string memory description,
         address proposer
-    ) internal override(Governor, GovernorStorage, GovernorRestrictedRoles) returns (uint256) {
+    ) internal override(Governor, GovernorStorage, GovernorDividedPowers) returns (uint256) {
         return super._propose(targets, values, calldatas, description, proposer);
     }
 
     function _countVote(uint256 proposalId, address account, uint8 support, uint256 weight, bytes memory params)
         internal
         virtual
-        override(Governor, GovernorRestrictedRoles, GovernorCountingVoteSuperSimple)
+        override(Governor, GovernorDividedPowers, GovernorCountingVoteSuperSimple)
     {
         return super._countVote(proposalId, account, support, weight, params);
     }
@@ -91,7 +91,7 @@ contract GovernedIdentity is
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash
-    ) internal virtual override (Governor, GovernorRestrictedRoles) {
+    ) internal virtual override (Governor, GovernorDividedPowers) {
         super._executeOperations(proposalId, targets, values, calldatas, descriptionHash);
     }
 }

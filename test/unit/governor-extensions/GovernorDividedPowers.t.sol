@@ -9,11 +9,11 @@ pragma solidity 0.8.24;
 import {Test, console} from "forge-std/Test.sol";
 import {GovernedIdentity} from "../../../src/example-governance-system/GovernedIdentity.sol";
 import {LawTemplate} from "../../../src/example-laws/LawTemplate.sol";
-import {GovernorRestrictedRoles} from "../../../src/governor-extensions/GovernorRestrictedRoles.sol";
+import {GovernorDividedPowers} from "../../../src/governor-extensions/GovernorDividedPowers.sol";
 import {LawsMock} from "../../mocks/LawsMock.sol";
 import {CommunityTokenMock} from "../../mocks/CommunityTokenMock.sol";
 
-contract GovernorRestrictedRolesTest is Test {
+contract GovernorDividedPowersTest is Test {
     LawTemplate lawTemplate;
     LawsMock lawsMock;
     GovernedIdentity governedIdentity;
@@ -117,9 +117,6 @@ contract GovernorRestrictedRolesTest is Test {
     }
 
     function test_GovernorCanRestrictFunctionByRole() public assignRoles {
-        uint256 proposedStateChange = 3333;
-        uint256 restrictedLawBefore;
-        uint256 restrictedLawAfter;
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = 0x4e8c7ee7; // s_restrictedLaw()
 
@@ -186,7 +183,6 @@ contract GovernorRestrictedRolesTest is Test {
         lawsMock.unrestrictedGovernedLaw(proposedStateChange);
     }
 
-    // £todo I have to build these tests I think. Have fun :D
     function test_RestrictedFunctionSucceedsWithProposalCall() public assignRoles restrictFunctions {
         uint256 proposedStateChange = 123456;
         bytes memory dataCall= abi.encodeWithSignature("restrictedLaw(uint256)", proposedStateChange); 
@@ -207,7 +203,6 @@ contract GovernorRestrictedRolesTest is Test {
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = dataCall; 
-        bytes32 descriptionHash = keccak256(bytes(proposalDescription));
 
         vm.startPrank(communityMembers[20]); 
         governedIdentity.execute(address(lawsMock), dataCall);
@@ -275,7 +270,8 @@ contract GovernorRestrictedRolesTest is Test {
         governedIdentity.execute(targets, values, calldatas, descriptionHash); // this calls execute on Governor contract -- does not pass
         vm.stopPrank(); 
     }
-
+    
+    // £todo I have to build these tests. Getting there... 
     function test_GovernedRestrictedFunctionRevertsWithAuthorisedDirectCall() public {}
 
     function test_GovernedRestrictedFunctionCannotReceiveUnauthorisedVotes() public {}
@@ -312,7 +308,6 @@ contract GovernorRestrictedRolesTest is Test {
         governedIdentity.execute(targets, values, calldatas, descriptionHash); // this calls execute on Governor contract -- does not pass
         vm.stopPrank(); 
 
-        uint256 stateAfter = lawsMock.s_restrictedGovernedLaw(); 
         vm.assertEq(lawsMock.s_restrictedGovernedLaw(), proposedStateChange);
     }
 

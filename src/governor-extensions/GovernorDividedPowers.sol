@@ -22,7 +22,7 @@ import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManage
 import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
-abstract contract GovernorRestrictedRoles is Governor, AccessManager {
+abstract contract GovernorDividedPowers is Governor, AccessManager {
     // needs to be immutable & part of constructor args when transforming this into extension.
 
     error GovernorDividedPowers__ProposalContainsUnauthorizedCalls(bytes[] calldatas);
@@ -121,7 +121,7 @@ abstract contract GovernorRestrictedRoles is Governor, AccessManager {
     function _executeOperations(
         uint256 /* proposalId */,
         address[] memory targets,
-        uint256[] memory values,
+        uint256[]memory  /* values */,
         bytes[] memory calldatas,
         bytes32 /*descriptionHash*/
     ) internal virtual override {

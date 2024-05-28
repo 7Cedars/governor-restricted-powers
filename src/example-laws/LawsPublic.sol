@@ -5,7 +5,7 @@ import {GovernedIdentity} from "../../src/example-governance-system/GovernedIden
 import {LawTemplate} from "../../src/example-laws/LawTemplate.sol";
 
 /**
- * @title Example Public Laws, to be used in combination with the GovernorRestrictedRoles extension of Governor.sol.
+ * @title Example Public Laws, to be used in combination with the GovernorDividedPowers extension of Governor.sol.
  *
  * @author Seven Cedars
  *
