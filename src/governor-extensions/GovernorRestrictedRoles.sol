@@ -20,6 +20,7 @@ pragma solidity ^0.8.20;
 
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract GovernorRestrictedRoles is Governor, AccessManager {
     // needs to be immutable & part of constructor args when transforming this into extension.
@@ -34,7 +35,9 @@ abstract contract GovernorRestrictedRoles is Governor, AccessManager {
     /**
      * @param _initialAdmin account that is the initial admin of the governance system.
      */
-    constructor(address _initialAdmin) AccessManager(_initialAdmin) {}
+    constructor(address _initialAdmin) AccessManager(_initialAdmin) {
+
+    }
 
     /**
      * Overriding the propose function with two additional checks
@@ -55,15 +58,15 @@ abstract contract GovernorRestrictedRoles is Governor, AccessManager {
         address proposer
     ) internal virtual override returns (uint256 proposalId) {
         proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)));
-        bytes4 functionSelector = bytes4(calldatas[0]);
-        uint64 calldatasRole = getTargetFunctionRole(targets[0], functionSelector);
+        bytes4 functionSelector = bytes4(calldatas[0]); // selector fo first function 
+        uint64 calldatasRole = getTargetFunctionRole(targets[0], functionSelector); // role restriction of first function. 
 
         // Check 1: in case there are more than 1 calldatas slots, check if all have the same role restriction as function 0.
         // if not, revert everything
         if (calldatas.length > 1) {
             for (uint256 i = 1; i < calldatas.length; i++) {
                 functionSelector = bytes4(calldatas[i]);
-                uint64 role = getTargetFunctionRole(targets[0], functionSelector);
+                uint64 role = getTargetFunctionRole(targets[i], functionSelector);
                 if (calldatasRole != role) {
                     revert GovernorDividedPowers__ProposalContainsMultipleRoles(calldatas);
                 }
@@ -105,6 +108,35 @@ abstract contract GovernorRestrictedRoles is Governor, AccessManager {
         (bool hasRole,) = hasRole(restrictedToRole, account);
         if (!hasRole) {
             revert GovernorDividedPowers__UnauthorizedVote(proposalId);
+        }
+    }
+
+        /**
+     * @dev Internal execution mechanism. Can be overridden (without a super call) to modify the way execution is
+     * performed (for example adding a vault/timelock).
+     *
+     * NOTE: Calling this function directly will NOT check the current state of the proposal, set the executed flag to
+     * true or emit the `ProposalExecuted` event. Executing a proposal should be done using {execute} or {_execute}.
+     */
+    function _executeOperations(
+        uint256 /* proposalId */,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 /*descriptionHash*/
+    ) internal virtual override {
+
+
+// NB! this now seems to always pass - but NOT change any state. 
+        for (uint256 i = 0; i < targets.length; ++i) {
+            // NB: I encode calldata to send a call to my own contract: the execute call from {AccessManager}. Mental. 
+            // This kind of works!! use DELEGATEcall, to the contract that uses this extension. It does not seem to be a problem, because it is a delegateCall to the same contract. 
+            // The use of delegateCall transfers the msg.sender of primary call into the execute function inherited from {AccessManager}. 
+            // this in turn calls the function at external laws contract via {functionCallWithValue} - and changes state of external Law contract.  
+            // £additional issue: This does mean that no value can be send throguh function; as delegateCall does not allow this. 
+            bytes memory dataCall= abi.encodeWithSignature("execute(address,bytes)", targets[i], calldatas[i]); 
+            (bool success, bytes memory returndata) = address(this).delegatecall(dataCall);
+            Address.verifyCallResult(success, returndata);
         }
     }
 }

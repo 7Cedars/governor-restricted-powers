@@ -42,6 +42,8 @@ contract LawsMock is LawTemplate {
     function restrictedLaw(uint256 _var) external restricted {
         string memory description = "A role restricted law that changes a state variable.";
 
+        // NB this.grantRole.selector -- you can get selector in function itself! (and hence read the role restriction in the function itself..)
+
         s_restrictedLaw = _var;
 
         emit LawTriggered(keccak256(bytes(description)), true);

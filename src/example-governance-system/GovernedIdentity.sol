@@ -84,6 +84,16 @@ contract GovernedIdentity is
     {
         return super._countVote(proposalId, account, support, weight, params);
     }
+
+    function _executeOperations(
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    ) internal virtual override (Governor, GovernorRestrictedRoles) {
+        super._executeOperations(proposalId, targets, values, calldatas, descriptionHash);
+    }
 }
 
 // Structure contract // -- from Patrick Collins.

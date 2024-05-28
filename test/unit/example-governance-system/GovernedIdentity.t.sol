@@ -163,9 +163,10 @@ contract GovernedIdentityTest is Test {
         bytes32 descriptionHash = keccak256(bytes(description));
 
         // check if target contract state has indeed breen changed.
+        vm.startPrank(communityMembers[0]);
         governedIdentity.execute(targets, values, calldatas, descriptionHash);
+        vm.stopPrank(); 
         uint256 result = lawsMock.s_unrestrictedLaw();
-
         console.log("HELLO WORLD", result);
     }
 }

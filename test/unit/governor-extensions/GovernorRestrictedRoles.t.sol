@@ -58,6 +58,10 @@ contract GovernorRestrictedRolesTest is Test {
 
 
     modifier restrictFunctions() {
+        bytes4[] memory selectorsRolesCitizen = new bytes4[](2);
+        selectorsRolesCitizen[0] = 0x0c8e7067; // "unrestrictedLaw(uint256)": ""
+        selectorsRolesCitizen[1] = 0x07a1ac5d; // "unrestrictedGovernedLaw(uint256)": ""
+
         bytes4[] memory selectorsRolesCouncillor = new bytes4[](1);
         selectorsRolesCouncillor[0] = 0x79ba2b3b; // restrictedGovernedLaw()
 
@@ -65,7 +69,11 @@ contract GovernorRestrictedRolesTest is Test {
         selectorsRolesJudge[0] = 0xa196ad83; //  restrictedLaw()
         selectorsRolesJudge[1] = 0x79ba2b3b; //  restrictedGovernedLaw()
 
+
         vm.startPrank(communityMembers[0]);
+        governedIdentity.setTargetFunctionRole(
+            address(lawsMock), selectorsRolesCitizen, governedIdentity.CITIZEN()
+        );
         governedIdentity.setTargetFunctionRole(
             address(lawsMock), selectorsRolesCouncillor, governedIdentity.COUNCILLOR()
         );
@@ -179,13 +187,16 @@ contract GovernorRestrictedRolesTest is Test {
     }
 
     // £todo I have to build these tests I think. Have fun :D
-    function test_GovernedFunctionSucceedsWithProposalCall() public assignRoles restrictFunctions {
+    function test_RestrictedFunctionSucceedsWithProposalCall() public assignRoles restrictFunctions {
         uint256 proposedStateChange = 123456;
-        bytes memory dataCall= abi.encodeWithSignature("unrestrictedGovernedLaw(uint256)", proposedStateChange); 
+        bytes memory dataCall= abi.encodeWithSignature("restrictedLaw(uint256)", proposedStateChange); 
         string memory proposalDescription = "This is a test proposal."; 
 
+        (bool isClosed) = governedIdentity.isTargetClosed(address(lawsMock)); 
+        console.log("isClosed?", isClosed); 
+
         // create & pass proposal. 
-        uint256 proposalId = createProposal(1, dataCall, proposalDescription);
+        uint256 proposalId = createProposal(20, dataCall, proposalDescription);
         succeedProposal(proposalId, governedIdentity.PUBLIC_ROLE());
         vm.roll(block.timestamp + 60_000);
         
@@ -197,7 +208,39 @@ contract GovernorRestrictedRolesTest is Test {
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = dataCall; 
         bytes32 descriptionHash = keccak256(bytes(proposalDescription));
+
+        vm.startPrank(communityMembers[20]); 
+        governedIdentity.execute(address(lawsMock), dataCall);
+        vm.stopPrank();
+
+        vm.assertEq(lawsMock.s_restrictedLaw(), proposedStateChange);
+    }
+
+    function test_GovernedFunctionSucceedsWithProposalCall() public assignRoles restrictFunctions {
+        uint256 proposedStateChange = 123456;
+        bytes memory dataCall= abi.encodeWithSignature("unrestrictedGovernedLaw(uint256)", proposedStateChange); 
+        string memory proposalDescription = "This is a test proposal."; 
+
+        // create & pass proposal. 
+        uint256 proposalId = createProposal(1, dataCall, proposalDescription);
+        succeedProposal(proposalId, governedIdentity.PUBLIC_ROLE());
+        vm.roll(block.timestamp + 60_000);
+
+        console.log("address community member[1]:", communityMembers[1]); 
+        console.log("address contract GovernedIdentity:", address(governedIdentity)); 
+        
+        // call execute on suceeded proposal:
+        address[] memory targets = new address[](1);
+        targets[0] = address(lawsMock);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = dataCall; 
+        bytes32 descriptionHash = keccak256(bytes(proposalDescription));
+        
+        vm.startPrank(communityMembers[1]); 
         governedIdentity.execute(targets, values, calldatas, descriptionHash);
+        vm.stopPrank(); 
 
         vm.assertEq(lawsMock.s_unrestrictedGovernedLaw(), proposedStateChange);
     }
@@ -212,23 +255,13 @@ contract GovernorRestrictedRolesTest is Test {
 
         // create & pass proposal. 
         uint256 proposalId = createProposal(
-            20, // Every 10th community member is councillor. The restrictedGovernedLaw function can be called by Councillor role. 
+            20, // Every 20th community member is a judge. The restrictedGovernedLaw function can be called by Judge role. 
             dataCall, 
             proposalDescription
             );
         succeedProposal(proposalId, governedIdentity.JUDGE());
-
-        //  0x79ba2b3b
-        
-
         vm.roll(block.number + 60_000);
         
-        // CONTINUE HERE 
-        // NB: Execute fails because the GovernedIdentity contract has not been whitelisted. 
-        // This is the type of behaviour I really do not want. It is caused by the law rol being positioned in an external contract and being called with call; not delegatcall. 
-        // but using delegateCall will really open up a can of worms when it comes to security...  
-        // It needs to be restricted by specific role. how do I fix this? 
-        // call execute on suceeded proposal: 
         address[] memory targets = new address[](1);
         targets[0] = address(lawsMock);
         uint256[] memory values = new uint256[](1);
@@ -237,11 +270,10 @@ contract GovernorRestrictedRolesTest is Test {
         calldatas[0] = dataCall; 
         bytes32 descriptionHash = keccak256(bytes(proposalDescription));
 
-        vm.prank(communityMembers[10]);
-        governedIdentity.execute(targets, values, calldatas, descriptionHash);
-
-
-        // vm.assertEq(lawsMock.s_restrictedGovernedLaw(), proposedStateChange);
+        vm.expectRevert();
+        vm.startPrank(communityMembers[10]); // Note: this is a councillor role. Should not be able to 
+        governedIdentity.execute(targets, values, calldatas, descriptionHash); // this calls execute on Governor contract -- does not pass
+        vm.stopPrank(); 
     }
 
     function test_GovernedRestrictedFunctionRevertsWithAuthorisedDirectCall() public {}
@@ -250,7 +282,39 @@ contract GovernorRestrictedRolesTest is Test {
 
     function test_GovernedRestrictedFunctionCanReceiveAuthorisedVotes() public {}
 
-    function test_GovernedRestrictedFunctionSucceedsWithAuthorisedProposalCall() public {}
+    function test_GovernedRestrictedFunctionSucceedsWithAuthorisedProposalCall() public assignRoles restrictFunctions  {
+        uint256 proposedStateChange = 1;
+        bytes memory dataCall= abi.encodeWithSignature("restrictedGovernedLaw(uint256)", proposedStateChange); 
+        string memory proposalDescription = "This is a test proposal."; 
+
+        uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
+        console.log("ROLE: ", role); 
+
+        // create & pass proposal. 
+        uint256 proposalId = createProposal(
+            20, // Every 20th community member is a judge. The restrictedGovernedLaw function can be called by Judge role. 
+            dataCall, 
+            proposalDescription
+            );
+        succeedProposal(proposalId, governedIdentity.JUDGE());
+
+        vm.roll(block.number + 60_000);
+        
+        address[] memory targets = new address[](1);
+        targets[0] = address(lawsMock);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = dataCall; 
+        bytes32 descriptionHash = keccak256(bytes(proposalDescription));
+
+        vm.startPrank(communityMembers[20]);
+        governedIdentity.execute(targets, values, calldatas, descriptionHash); // this calls execute on Governor contract -- does not pass
+        vm.stopPrank(); 
+
+        uint256 stateAfter = lawsMock.s_restrictedGovernedLaw(); 
+        vm.assertEq(lawsMock.s_restrictedGovernedLaw(), proposedStateChange);
+    }
 
     /*/////////////////////////////////////////////////////
     //                Helper functions                   //  
