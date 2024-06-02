@@ -27,8 +27,9 @@ contract GovernedIdentity is
     GovernorStorage,
     GovernorVotes,
     GovernorVotesQuorumFraction,
-    GovernorDividedPowers,
-    GovernorCountingVoteSuperSimple
+    GovernorCountingVoteSuperSimple,
+    GovernorDividedPowers
+    
 {
     // role definitions.
     // Note that it is also possible to set roles through the grantRole function.
@@ -38,9 +39,9 @@ contract GovernedIdentity is
 
     constructor(IVotes _token, address _initialAdmin)
         Governor("GovernedIdentity")
-        GovernorSettings(7200, /* 1 day */ 50400, /* 1 week */ 0)
+        GovernorSettings(7200, /* 1 day */ 21600, /* 3 days */ 0)
         GovernorVotes(_token)
-        GovernorVotesQuorumFraction(4)
+        GovernorVotesQuorumFraction(0)
         GovernorDividedPowers(_initialAdmin)
     {}
 

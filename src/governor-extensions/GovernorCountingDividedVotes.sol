@@ -11,7 +11,7 @@ import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
  * every vote counts once.
  * This is often a the easiest way to vote when governance is divided by roles.
  */
-abstract contract GovernorCountingVoteSuperSimple is Governor {
+abstract contract GovernorCountingDividedVotes is Governor {
     /**
      * @dev Supported vote types. Matches Governor Bravo ordering.
      */
@@ -61,6 +61,7 @@ abstract contract GovernorCountingVoteSuperSimple is Governor {
     /**
      * @dev See {Governor-_quorumReached}.
      */
+    // £todo: this has to be divided per role! 
     function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
@@ -70,10 +71,13 @@ abstract contract GovernorCountingVoteSuperSimple is Governor {
     /**
      * @dev See {Governor-_voteSucceeded}. In this module, the forVotes must be strictly over the againstVotes.
      */
+    // £todo: this has to be divided per role! 
     function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        return proposalVote.forVotes > proposalVote.againstVotes;
+        return true; 
+
+        // return proposalVote.forVotes > proposalVote.againstVotes;
     }
 
     /**

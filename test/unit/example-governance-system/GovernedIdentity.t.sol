@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.24;
 
-/* 
-NB: this test file is to try out Governor and AccesControl contracts. 
-They are not proper tests (for instance, they miss asserts) 
-*/
-
 import {Test, console} from "forge-std/Test.sol";
 import {GovernedIdentity} from "../../../src/example-governance-system/GovernedIdentity.sol";
 import {LawsMock} from "../../mocks/LawsMock.sol";
@@ -29,22 +24,11 @@ contract GovernedIdentityTest is Test {
     GovernedIdentity governedIdentity;
     LawsMock lawsMock;
 
-    address[] communityMembers = [
-        address(1),
-        address(2),
-        address(3),
-        address(4),
-        address(5),
-        address(6),
-        address(7),
-        address(8),
-        address(9),
-        address(10)
-    ];
+    address[] communityMembers = new address[](100); // we create a community of a hundred members. 
 
     uint256 proposalId;
-    uint256 voteStart = 86_401;
-    uint256 voteEnd = 691_201;
+    uint256 voteStart = 8_000;
+    uint256 voteEnd = 50_000;
     uint256 proposedStateChange = 666666666666;
 
     modifier distributeAndDelegateCommunityTokenMocks() {
@@ -54,6 +38,27 @@ contract GovernedIdentityTest is Test {
             vm.prank(communityMembers[i]);
             communityToken.delegate(communityMembers[i]);
         }
+        _;
+    }
+
+    modifier assignRoles() {
+        uint256 percentageCitizens = 100; // every member is a citizen. 
+        uint256 percentageCouncillors = 10; // every 10th member is a councillor. 
+        uint256 percentageJudges = 5; // every 20th member is a judge. 
+
+        vm.startPrank(communityMembers[0]);
+        for (uint160 i = 1; i < communityMembers.length; i++) {
+            if (i % (100 / percentageCitizens) == 0) {
+                governedIdentity.grantRole(governedIdentity.CITIZEN(), communityMembers[i], 0);
+            }
+            if (i % (100 / percentageCouncillors) == 0) {
+                governedIdentity.grantRole(governedIdentity.COUNCILLOR(), communityMembers[i], 0);
+            }
+            if (i % (100 / percentageJudges) == 0) {
+                governedIdentity.grantRole(governedIdentity.JUDGE(), communityMembers[i], 0);
+            }
+        }
+        vm.stopPrank();
 
         _;
     }
@@ -72,7 +77,7 @@ contract GovernedIdentityTest is Test {
         vm.expectEmit(true, false, false, false);
         emit ProposalCreated(
             proposalId,
-            communityMembers[0],
+            communityMembers[1],
             targets,
             values,
             new string[](targets.length),
@@ -82,12 +87,16 @@ contract GovernedIdentityTest is Test {
             description
         );
 
-        vm.prank(communityMembers[0]);
+        vm.prank(communityMembers[1]);
         governedIdentity.propose(targets, values, calldatas, description);
         _;
     }
 
     function setUp() public {
+        for (uint160 i; i < communityMembers.length; i++) {
+            communityMembers[i] = address(i + 12345); // avoiding address(0); 
+        }
+
         communityToken = new CommunityTokenMock();
         governedIdentity = new GovernedIdentity(communityToken, communityMembers[0]);
         lawsMock = new LawsMock(payable(address(governedIdentity)));
@@ -113,6 +122,7 @@ contract GovernedIdentityTest is Test {
         public
         distributeAndDelegateCommunityTokenMocks
         createProposal
+        assignRoles
     {
         uint8 vote = 1;
 
@@ -131,6 +141,7 @@ contract GovernedIdentityTest is Test {
         public
         distributeAndDelegateCommunityTokenMocks
         createProposal
+        assignRoles
     {
         uint256 numberOfYesVotes = 8;
         uint8 vote = 1;

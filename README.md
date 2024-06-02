@@ -23,7 +23,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/7Cedars/loyalty-program-contracts"> 
-    <img src="public/logo.png" alt="Logo" width="500" height="500">
+    <img src="public/logo.png" alt="Logo" width="300" height="300">
   </a>
 
 <h3 align="center">Governor Separated Powers: Introducing separation of powers to OpenZeppelin's Governor Contract </h3>
@@ -35,7 +35,7 @@
     <br />
     <br />
     <!--NB: TO DO --> 
-    <a href="https://loyalty-program-psi.vercel.app">View an example contract on [sepolia.etherscan.io](https://sepolia.etherscan.io/).</a>
+    <a href="https://sepolia.etherscan.io">View an example contract on sepolia.etherscan.io.</a>
     ·
     <a href="https://github.com/7Cedars/loyalty-program-contracts/issues">Report Bug</a>
     ·
@@ -50,6 +50,7 @@
     <li>
       <a href="#about">About</a>
       <ul>
+        <li><a href="#important-files-and-folders">Important files and folders</a></li>
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
@@ -175,7 +176,7 @@ To get a local copy up and running do the following.
 ## Known Issues 
 
 - [ ] This protocol is under active development. Basic functionality is barely implemented. 
-- [ ] 
+- [ ] ...
 
 See the [open issues](https://github.com/7Cedars/loyalty-program-contracts/issues) for a full list of proposed features (and known issues).
 

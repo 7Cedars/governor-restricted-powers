@@ -12,6 +12,7 @@ import {LawTemplate} from "../../../src/example-laws/LawTemplate.sol";
 import {GovernorDividedPowers} from "../../../src/governor-extensions/GovernorDividedPowers.sol";
 import {LawsMock} from "../../mocks/LawsMock.sol";
 import {CommunityTokenMock} from "../../mocks/CommunityTokenMock.sol";
+// import {IGovernor} from "../../mocks/CommunityTokenMock.sol";
 
 contract GovernorDividedPowersTest is Test {
     LawTemplate lawTemplate;
@@ -26,7 +27,7 @@ contract GovernorDividedPowersTest is Test {
     modifier assignRoles() {
         uint256 percentageCitizens = 100; // every member is a citizen. 
         uint256 percentageCouncillors = 10; // every 10th member is a councillor. 
-        uint256 percentageJudges = 5; // every 20th member is a judge. 
+        uint256 percentageJudges = 100; // every 20th member is a judge. 
 
         vm.startPrank(communityMembers[0]);
         for (uint160 i = 1; i < communityMembers.length; i++) {
@@ -150,10 +151,6 @@ contract GovernorDividedPowersTest is Test {
     function test_RestrictedFunctionRevertsWithUnauthorisedCall() public restrictFunctions {
         uint256 proposedStateChange = 123456;
 
-        // vm.expectRevert(abi.encodeWithSelector(
-        //     LawsMock.AccessManagedUnauthorized.selector, address(999))
-        // );
-
         vm.expectRevert();
         vm.prank(address(999));
         lawsMock.restrictedLaw(proposedStateChange);
@@ -174,10 +171,6 @@ contract GovernorDividedPowersTest is Test {
     function test_GovernedFunctionRevertsWithDirectCall() public {
         uint256 proposedStateChange = 123456;
 
-        // vm.expectRevert(abi.encodeWithSelector(
-        //     LawsMock.GovernorOnly.selector, address(999))
-        // );
-
         vm.expectRevert();
         vm.prank(address(999));
         lawsMock.unrestrictedGovernedLaw(proposedStateChange);
@@ -193,7 +186,7 @@ contract GovernorDividedPowersTest is Test {
 
         // create & pass proposal. 
         uint256 proposalId = createProposal(20, dataCall, proposalDescription);
-        succeedProposal(proposalId, governedIdentity.PUBLIC_ROLE());
+        succeedProposal(proposalId, governedIdentity.JUDGE());
         vm.roll(block.timestamp + 60_000);
         
         // call execute on suceeded proposal:
@@ -218,8 +211,8 @@ contract GovernorDividedPowersTest is Test {
 
         // create & pass proposal. 
         uint256 proposalId = createProposal(1, dataCall, proposalDescription);
-        succeedProposal(proposalId, governedIdentity.PUBLIC_ROLE());
-        vm.roll(block.timestamp + 60_000);
+        succeedProposal(proposalId, governedIdentity.CITIZEN());
+        vm.roll(block.timestamp + 600_000_000);
 
         console.log("address community member[1]:", communityMembers[1]); 
         console.log("address contract GovernedIdentity:", address(governedIdentity)); 
@@ -272,11 +265,78 @@ contract GovernorDividedPowersTest is Test {
     }
     
     // £todo I have to build these tests. Getting there... 
-    function test_GovernedRestrictedFunctionRevertsWithAuthorisedDirectCall() public {}
+    function test_GovernedRestrictedFunctionRevertsWithAuthorisedDirectCall() public assignRoles restrictFunctions {
+        uint256 proposedStateChange = 123456;
+        bytes memory dataCall = abi.encodeWithSignature("restrictedGovernedLaw(uint256)", proposedStateChange); 
+        
+        address[] memory targets = new address[](1);
+        targets[0] = address(lawsMock);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = dataCall;
 
-    function test_GovernedRestrictedFunctionCannotReceiveUnauthorisedVotes() public {}
+        // check if community member has correct role to call function. 
+        uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
+        (bool hasRole , ) = governedIdentity.hasRole(role, communityMembers[20]);
+        vm.assertEq(hasRole, true); 
 
-    function test_GovernedRestrictedFunctionCanReceiveAuthorisedVotes() public {}
+        // calling function directly - reverts. 
+        vm.expectRevert();
+        vm.startPrank(communityMembers[20]); 
+        lawsMock.restrictedGovernedLaw(proposedStateChange);
+        vm.stopPrank(); 
+    }
+
+    function test_GovernedRestrictedFunctionCannotReceiveUnauthorisedVotes() public assignRoles restrictFunctions {
+        uint256 proposedStateChange = 123456;
+        bytes memory dataCall= abi.encodeWithSignature("restrictedGovernedLaw(uint256)", proposedStateChange); 
+        string memory proposalDescription = "This is a test proposal."; 
+        uint8 vote = 1; // vote in favor
+        uint160 communityMemberId = 3; 
+
+        // create & pass proposal. 
+        uint256 proposalId = createProposal(
+            20, // Every 20th community member is a judge. The restrictedGovernedLaw function can be called by Judge role. 
+            dataCall, 
+            proposalDescription
+            );
+
+        // check if community member does NOT have correct role to call function. 
+        uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
+        (bool hasRole , ) = governedIdentity.hasRole(role, communityMembers[communityMemberId]);
+        vm.assertEq(hasRole, false); 
+  
+        vm.roll(block.number + 10_000);
+        vm.expectRevert(); 
+        vm.startPrank(communityMembers[communityMemberId]);
+        governedIdentity.castVote(proposalId, vote);
+        vm.stopPrank(); 
+    }
+
+    function test_GovernedRestrictedFunctionCanReceiveAuthorisedVotes() public assignRoles restrictFunctions {
+        uint256 proposedStateChange = 123456;
+        bytes memory dataCall= abi.encodeWithSignature("restrictedGovernedLaw(uint256)", proposedStateChange); 
+        string memory proposalDescription = "This is a test proposal."; 
+        uint8 vote = 1; // vote in favor
+        uint160 communityMemberId = 40; 
+
+        // create & pass proposal. 
+        uint256 proposalId = createProposal(
+            20, // Every 20th community member is a judge. The restrictedGovernedLaw function can be called by Judge role. 
+            dataCall, 
+            proposalDescription
+            );
+
+        // check if community member has correct role to call function. 
+        uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
+        (bool hasRole , ) = governedIdentity.hasRole(role, communityMembers[communityMemberId]);
+        vm.assertEq(hasRole, true); 
+        
+        vm.roll(block.number + 10_000);
+        vm.prank(communityMembers[communityMemberId]);
+        governedIdentity.castVote(proposalId, vote);
+    }
 
     function test_GovernedRestrictedFunctionSucceedsWithAuthorisedProposalCall() public assignRoles restrictFunctions  {
         uint256 proposedStateChange = 1;
@@ -295,6 +355,10 @@ contract GovernorDividedPowersTest is Test {
         succeedProposal(proposalId, governedIdentity.JUDGE());
 
         vm.roll(block.number + 60_000);
+
+        // ProposalState proposalState = governedIdentity.state(proposalId); 
+
+        // console.log("state proposal:", proposalState); 
         
         address[] memory targets = new address[](1);
         targets[0] = address(lawsMock);
@@ -304,6 +368,7 @@ contract GovernorDividedPowersTest is Test {
         calldatas[0] = dataCall; 
         bytes32 descriptionHash = keccak256(bytes(proposalDescription));
 
+        vm.roll(block.number + 60_000);
         vm.startPrank(communityMembers[20]);
         governedIdentity.execute(targets, values, calldatas, descriptionHash); // this calls execute on Governor contract -- does not pass
         vm.stopPrank(); 

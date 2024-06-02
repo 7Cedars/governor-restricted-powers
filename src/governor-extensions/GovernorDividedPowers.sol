@@ -31,12 +31,44 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
 
     // additional mapping needed to keep track of role restriction of proposal.
     mapping(uint256 proposalId => uint64) private _proposalsRole;
+    // additional mapping needed fto keep track of number of accounts that hold roles. Otherwise voting per role does not work.  
+    mapping(uint64 roleId => uint256) private _amountOfHolders; 
 
     /**
      * @param _initialAdmin account that is the initial admin of the governance system.
      */
-    constructor(address _initialAdmin) AccessManager(_initialAdmin) {
+    constructor(address _initialAdmin) AccessManager(_initialAdmin) { }
 
+    function _grantRole(
+        uint64 roleId,
+        address account,
+        uint32 grantDelay,
+        uint32 executionDelay
+    ) internal virtual override returns (bool) {
+
+        // £ CONT here. 
+        // Here counting has to be added.  
+
+        bool newMember = super._grantRole(roleId, account, grantDelay, executionDelay); 
+
+        _amountOfHolders[roleId]++;   
+       
+        return newMember;
+    }
+
+        /**
+     * @dev Internal version of {revokeRole} without access control. This logic is also used by {renounceRole}.
+     * Returns true if the role was previously granted.
+     *
+     * Emits a {RoleRevoked} event if the account had the role.
+     */
+    function _revokeRole(uint64 roleId, address account) internal virtual override returns (bool) {
+        super._revokeRole(roleId, account); 
+
+        // £ here substract from mapping. -- check if this actually substracts... 
+        _amountOfHolders[roleId]--;   
+
+        return true;
     }
 
     /**
@@ -91,7 +123,7 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
     }
 
     /**
-     * Add check to count vote.
+     * Adds restricted role check to _countVote.
      *
      * @dev this function is an override of the initial (empty) _countVote function in Governor.sol
      * It still needs an additional extention to add the actual voting mechanism.
@@ -105,13 +137,13 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
         bytes memory /* params */
     ) internal virtual override(Governor) {
         uint64 restrictedToRole = _proposalsRole[proposalId];
-        (bool hasRole,) = hasRole(restrictedToRole, account);
-        if (!hasRole) {
+        (bool hasRole, ) = hasRole(restrictedToRole, account);
+        if (restrictedToRole != 0 && hasRole == false) {
             revert GovernorDividedPowers__UnauthorizedVote(proposalId);
         }
     }
 
-        /**
+    /**
      * @dev Internal execution mechanism. Can be overridden (without a super call) to modify the way execution is
      * performed (for example adding a vault/timelock).
      *
@@ -126,8 +158,6 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
         bytes32 /*descriptionHash*/
     ) internal virtual override {
 
-
-// NB! this now seems to always pass - but NOT change any state. 
         for (uint256 i = 0; i < targets.length; ++i) {
             // NB: I encode calldata to send a call to my own contract: the execute call from {AccessManager}. Mental. 
             // This kind of works!! use DELEGATEcall, to the contract that uses this extension. It does not seem to be a problem, because it is a delegateCall to the same contract. 
@@ -139,4 +169,6 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
             Address.verifyCallResult(success, returndata);
         }
     }
+
+
 }
