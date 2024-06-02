@@ -18,7 +18,7 @@ import {GovernorVotes, IVotes} from "@openzeppelin/contracts/governance/extensio
 import {GovernorVotesQuorumFraction} from
     "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import {GovernorDividedPowers} from "../governor-extensions/GovernorDividedPowers.sol";
-import {GovernorCountingVoteSuperSimple} from "../governor-extensions/GovernorCountingVoteSuperSimple.sol";
+import {GovernorCountingDividedVotes} from "../governor-extensions/GovernorCountingDividedVotes.sol";
 
 // @custom:security-contact cedars7@proton.me
 contract GovernedIdentity is
@@ -27,7 +27,7 @@ contract GovernedIdentity is
     GovernorStorage,
     GovernorVotes,
     GovernorVotesQuorumFraction,
-    GovernorCountingVoteSuperSimple,
+    GovernorCountingDividedVotes,
     GovernorDividedPowers
     
 {
@@ -81,7 +81,7 @@ contract GovernedIdentity is
     function _countVote(uint256 proposalId, address account, uint8 support, uint256 weight, bytes memory params)
         internal
         virtual
-        override(Governor, GovernorDividedPowers, GovernorCountingVoteSuperSimple)
+        override(Governor, GovernorDividedPowers, GovernorCountingDividedVotes)
     {
         return super._countVote(proposalId, account, support, weight, params);
     }

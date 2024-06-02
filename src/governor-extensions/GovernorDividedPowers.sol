@@ -30,9 +30,9 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
     error GovernorDividedPowers__UnauthorizedVote(uint256 proposalId);
 
     // additional mapping needed to keep track of role restriction of proposal.
-    mapping(uint256 proposalId => uint64) private _proposalsRole;
+    mapping(uint256 proposalId => uint64) public proposalRole;
     // additional mapping needed fto keep track of number of accounts that hold roles. Otherwise voting per role does not work.  
-    mapping(uint64 roleId => uint256) private _amountOfHolders; 
+    mapping(uint64 roleId => uint256) public amountRoleHolders; 
 
     /**
      * @param _initialAdmin account that is the initial admin of the governance system.
@@ -51,7 +51,7 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
 
         bool newMember = super._grantRole(roleId, account, grantDelay, executionDelay); 
 
-        _amountOfHolders[roleId]++;   
+        amountRoleHolders[roleId]++;   
        
         return newMember;
     }
@@ -66,7 +66,7 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
         super._revokeRole(roleId, account); 
 
         // £ here substract from mapping. -- check if this actually substracts... 
-        _amountOfHolders[roleId]--;   
+        amountRoleHolders[roleId]--;   
 
         return true;
     }
@@ -114,8 +114,8 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
             revert GovernorDividedPowers__ProposalContainsUnauthorizedCalls(calldatas);
         }
 
-        // if checks pass, the role restriction is linked to proposalId in the _proposalsRole mapping...
-        _proposalsRole[proposalId] = calldatasRole;
+        // if checks pass, the role restriction is linked to proposalId in the proposalRole mapping...
+        proposalRole[proposalId] = calldatasRole;
         // ...and the rest of propose function is called.
         super._propose(targets, values, calldatas, description, proposer);
 
@@ -136,7 +136,7 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
         uint256, /* weight */
         bytes memory /* params */
     ) internal virtual override(Governor) {
-        uint64 restrictedToRole = _proposalsRole[proposalId];
+        uint64 restrictedToRole = proposalRole[proposalId];
         (bool hasRole, ) = hasRole(restrictedToRole, account);
         if (restrictedToRole != 0 && hasRole == false) {
             revert GovernorDividedPowers__UnauthorizedVote(proposalId);

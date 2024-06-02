@@ -129,6 +129,14 @@ contract GovernorDividedPowersTest is Test {
         vm.assertEq(assignedRole, governedIdentity.JUDGE());
     }
 
+    // £ todo 
+    function test_GovernorRewardingRoleIsCounted() public assignRoles {
+    }
+
+    // £ todo 
+    function test_GovernorRevokingRoleIsSubtracted() public assignRoles {
+    }
+
     function test_UnrestrictedFunctionCanBeCalledByAnyone() public {
         uint256 proposedStateChange = 123456;
 

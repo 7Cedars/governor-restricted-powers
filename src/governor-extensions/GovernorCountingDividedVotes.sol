@@ -4,6 +4,8 @@
 pragma solidity ^0.8.20;
 
 import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {GovernorVotes} from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+import {GovernorDividedPowers} from "./GovernorDividedPowers.sol";  
 
 /**
  * @dev Extension of {Governor} for simple, 3 options, vote counting.
@@ -11,7 +13,7 @@ import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
  * every vote counts once.
  * This is often a the easiest way to vote when governance is divided by roles.
  */
-abstract contract GovernorCountingDividedVotes is Governor {
+abstract contract GovernorCountingDividedVotes is Governor, GovernorVotes {
     /**
      * @dev Supported vote types. Matches Governor Bravo ordering.
      */
@@ -20,6 +22,8 @@ abstract contract GovernorCountingDividedVotes is Governor {
         For,
         Abstain
     }
+
+    GovernorDividedPowers governorDividedPowers; 
 
     struct ProposalVote {
         uint256 againstVotes;
@@ -60,12 +64,18 @@ abstract contract GovernorCountingDividedVotes is Governor {
 
     /**
      * @dev See {Governor-_quorumReached}.
+     * 
+     * @dev change: number of votes is multiplied by the share of all tokens / role holders. 
+     * This to account for the fewer people that can vote.  
      */
-    // £todo: this has to be divided per role! 
     function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
+        uint64 role = governorDividedPowers.proposalRole(proposalId); 
+        uint256 amountHolders = governorDividedPowers.amountRoleHolders(role); 
+        uint256 totalSupply = token().getPastTotalSupply(block.number);
 
-        return quorum(proposalSnapshot(proposalId)) <= proposalVote.forVotes + proposalVote.abstainVotes;
+        // the number of votes is multiplied the share(?) of role holders 
+        return quorum(proposalSnapshot(proposalId)) <= (proposalVote.forVotes + proposalVote.abstainVotes) * (totalSupply / amountHolders);
     }
 
     /**
@@ -73,6 +83,7 @@ abstract contract GovernorCountingDividedVotes is Governor {
      */
     // £todo: this has to be divided per role! 
     function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
+        // uint64 role = proposalRole(proposalId); 
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
         return true; 
