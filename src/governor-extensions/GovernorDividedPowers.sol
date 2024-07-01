@@ -23,8 +23,6 @@ import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract GovernorDividedPowers is Governor, AccessManager {
-    // needs to be immutable & part of constructor args when transforming this into extension.
-
     error GovernorDividedPowers__ProposalContainsUnauthorizedCalls(bytes[] calldatas);
     error GovernorDividedPowers__ProposalContainsMultipleRoles(bytes[] calldatas);
     error GovernorDividedPowers__UnauthorizedVote(uint256 proposalId);
@@ -45,18 +43,18 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
         mapping(address voter => bool) hasVoted;
     }
 
-    mapping(uint256 proposalId => ProposalVote) private _proposalVotes;
-    
-    // additional mapping needed to keep track of role restriction of proposal.
-    mapping(uint256 proposalId => uint64 proposalRole) public proposalRole;
-
-    // additional mapping needed fto keep track of number of accounts that hold roles. Otherwise quorum per role cannot be assessed.  
+    mapping(uint256 proposalId => ProposalVote) private _proposalVotes;  // additional mapping needed to keep track of role restriction of proposal.
+    mapping(uint256 proposalId => uint64 proposalRole) public proposalRole; // additional mapping needed fto keep track of number of accounts that hold roles. Otherwise quorum per role cannot be assessed.  
     mapping(uint64 roleId => uint256) public amountRoleHolders; 
-
+    uint256 public constant QUORUM_DENOMINATOR = 100; 
+    uint256 public immutable i_quorum_enumerator;    
+    
     /**
      * @param _initialAdmin account that is the initial admin of the governance system.
      */
-    constructor(address _initialAdmin) AccessManager(_initialAdmin) { }
+    constructor(address _initialAdmin, uint256 _quorum_enumerator) AccessManager(_initialAdmin) { 
+        i_quorum_enumerator = _quorum_enumerator;  
+    }
 
     /**
      * @notice granting role function. 
@@ -240,6 +238,18 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
     }
 
     /**
+     * @dev Returns the quorum for a timepoint, in terms of number of votes: `supply * numerator / denominator`.
+     */
+    function quorum(uint256 proposalId) public view virtual override returns (uint256) {
+        uint64 role = proposalRole[proposalId]; 
+        uint256 amountHolders = amountRoleHolders[role]; 
+
+        // return 20; 
+
+        return (amountHolders * i_quorum_enumerator) / QUORUM_DENOMINATOR; 
+    }
+
+    /**
      * @dev See {Governor-_quorumReached}.
      * 
      * @dev change: number of votes is multiplied by the share of all tokens / role holders. 
@@ -247,12 +257,10 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
      */
     function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
-        uint64 role = proposalRole[proposalId]; 
-        uint256 amountHolders = amountRoleHolders[role]; 
 
-        return true; 
-        // original: return quorum(proposalSnapshot(proposalId)) <= proposalVote.forVotes + proposalVote.abstainVotes;
-        // return quorum(proposalSnapshot(proposalId)) <= (proposalVote.forVotes + proposalVote.abstainVotes) / amountHolders; -- Divide by 0! 
+        // return true; 
+        // return quorum(proposalSnapshot(proposalId)) <= proposalVote.forVotes + proposalVote.abstainVotes;
+        return quorum(proposalId) <= proposalVote.forVotes + proposalVote.abstainVotes; 
     }
 
     /**
@@ -263,9 +271,9 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
      */
     function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId]; 
-        // return proposalVote.forVotes >= proposalVote.againstVotes;
+        return proposalVote.forVotes >= proposalVote.againstVotes;
 
-        return true; 
+        // return true; 
     }
 }
 

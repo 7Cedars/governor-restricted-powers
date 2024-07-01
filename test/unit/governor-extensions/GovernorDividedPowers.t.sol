@@ -57,7 +57,6 @@ contract GovernorDividedPowersTest is Test {
         _;
     }
 
-
     modifier restrictFunctions() {
         bytes4[] memory selectorsRolesCitizen = new bytes4[](2);
         selectorsRolesCitizen[0] = 0x0c8e7067; // "unrestrictedLaw(uint256)": ""
@@ -272,7 +271,6 @@ contract GovernorDividedPowersTest is Test {
         vm.stopPrank(); 
     }
     
-    // £todo I have to build these tests. Getting there... 
     function test_GovernedRestrictedFunctionRevertsWithAuthorisedDirectCall() public assignRoles restrictFunctions {
         uint256 proposedStateChange = 123456;
         bytes memory dataCall = abi.encodeWithSignature("restrictedGovernedLaw(uint256)", proposedStateChange); 
@@ -363,10 +361,6 @@ contract GovernorDividedPowersTest is Test {
         succeedProposal(proposalId, governedIdentity.JUDGE());
 
         vm.roll(block.number + 60_000);
-
-        // ProposalState proposalState = governedIdentity.state(proposalId); 
-
-        // console.log("state proposal:", proposalState); 
         
         address[] memory targets = new address[](1);
         targets[0] = address(lawsMock);
@@ -378,14 +372,38 @@ contract GovernorDividedPowersTest is Test {
 
         vm.roll(block.number + 60_000);
         vm.startPrank(communityMembers[20]);
-        governedIdentity.execute(targets, values, calldatas, descriptionHash); // this calls execute on Governor contract -- does not pass
+        governedIdentity.execute(targets, values, calldatas, descriptionHash); 
         vm.stopPrank(); 
 
         vm.assertEq(lawsMock.s_restrictedGovernedLaw(), proposedStateChange);
     }
 
+    function test_QuorumFailsWithInsufficientVotes() public assignRoles restrictFunctions {
+        uint256 proposedStateChange = 1;
+        bytes memory dataCall= abi.encodeWithSignature("restrictedGovernedLaw(uint256)", proposedStateChange); 
+        string memory proposalDescription = "This is a test proposal."; 
+
+        uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
+        console.log("ROLE: ", role); 
+
+        // create & pass proposal. 
+        uint256 proposalId = createProposal(
+            20, // Every 20th community member is a judge. The restrictedGovernedLaw function can be called by Judge role. 
+            dataCall, 
+            proposalDescription
+            );
+            // no one votes
+        vm.roll(block.number + 60_000);
+
+        governedIdentity.amountRoleHolders(2); 
+        governedIdentity.quorum(proposalId); 
+        governedIdentity.proposalVotes(proposalId); 
+
+        assert(uint256(governedIdentity.state(proposalId)) == 3); // 3 = Defeated
+    }
+
     /*/////////////////////////////////////////////////////
-    //                Helper functions                   //  
+    //             Internal Helper functions             //  
     /////////////////////////////////////////////////////*/
 
     // helper function to create proposal for functions in LawsMock.sol.

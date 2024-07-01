@@ -18,7 +18,6 @@ import {GovernorVotes, IVotes} from "@openzeppelin/contracts/governance/extensio
 import {GovernorVotesQuorumFraction} from
     "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import {GovernorDividedPowers} from "../governor-extensions/GovernorDividedPowers.sol";
-import {GovernorCountingDividedVotes} from "../governor-extensions/GovernorCountingDividedVotes.sol";
 
 // @custom:security-contact cedars7@proton.me
 contract GovernedIdentity is
@@ -26,7 +25,6 @@ contract GovernedIdentity is
     GovernorSettings,
     GovernorStorage,
     GovernorVotes,
-    GovernorVotesQuorumFraction,
     GovernorDividedPowers
     
 {
@@ -40,8 +38,7 @@ contract GovernedIdentity is
         Governor("GovernedIdentity")
         GovernorSettings(7200, /* 1 day */ 21600, /* 3 days */ 0)
         GovernorVotes(_token)
-        GovernorVotesQuorumFraction(0)
-        GovernorDividedPowers(_initialAdmin)
+        GovernorDividedPowers(_initialAdmin, 30)
     {}
 
     // The following functions are overrides required by Solidity.
@@ -54,14 +51,14 @@ contract GovernedIdentity is
         return super.votingPeriod();
     }
 
-    function quorum(uint256 blockNumber)
-        public
-        view
-        override(Governor, GovernorVotesQuorumFraction)
-        returns (uint256)
-    {
-        return super.quorum(blockNumber);
-    }
+    // function quorum(uint256 proposalId)
+    //     public
+    //     view
+    //     override(Governor, GovernorDividedPowers)
+    //     returns (uint256)
+    // {
+    //     return super.quorum(proposalId);
+    // }
 
     function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
         return super.proposalThreshold();
