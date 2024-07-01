@@ -29,6 +29,8 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
     error GovernorDividedPowers__ProposalContainsMultipleRoles(bytes[] calldatas);
     error GovernorDividedPowers__UnauthorizedVote(uint256 proposalId);
 
+    
+
     // additional mapping needed to keep track of role restriction of proposal.
     mapping(uint256 proposalId => uint64) public proposalRole;
     // additional mapping needed fto keep track of number of accounts that hold roles. Otherwise voting per role does not work.  
@@ -113,9 +115,14 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
             {
             revert GovernorDividedPowers__ProposalContainsUnauthorizedCalls(calldatas);
         }
-
-        // if checks pass, the role restriction is linked to proposalId in the proposalRole mapping...
-        proposalRole[proposalId] = calldatasRole;
+        
+        // if function does not have role restriction, getTargetFunctionRole returns 0, and proposal role is set to public. 
+        if (calldatasRole == 0) {
+            proposalRole[proposalId] = PUBLIC_ROLE; 
+        // Else the role restriction is linked to proposalId in the proposalRole mapping...
+        } else {
+            proposalRole[proposalId] = calldatasRole;
+        }
         // ...and the rest of propose function is called.
         super._propose(targets, values, calldatas, description, proposer);
 
@@ -127,7 +134,7 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
      *
      * @dev this function is an override of the initial (empty) _countVote function in Governor.sol
      * It still needs an additional extention to add the actual voting mechanism.
-     * GovernorCountingVoteSuperSimple.sol works well for this.
+     * GovernorCountingDividedVotes.sol works well for this.
      */
     function _countVote(
         uint256 proposalId,
@@ -169,6 +176,8 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
             Address.verifyCallResult(success, returndata);
         }
     }
+
+
 
 
 }

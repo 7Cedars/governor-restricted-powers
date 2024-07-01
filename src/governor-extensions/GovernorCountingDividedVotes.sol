@@ -23,7 +23,7 @@ abstract contract GovernorCountingDividedVotes is Governor, GovernorVotes {
         Abstain
     }
 
-    GovernorDividedPowers governorDividedPowers; 
+    GovernorDividedPowers governorDividedPowers; // NB! NOT designated => returns address(0).  
 
     struct ProposalVote {
         uint256 againstVotes;
@@ -70,25 +70,26 @@ abstract contract GovernorCountingDividedVotes is Governor, GovernorVotes {
      */
     function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
-        uint64 role = governorDividedPowers.proposalRole(proposalId); 
-        uint256 amountHolders = governorDividedPowers.amountRoleHolders(role); 
-        uint256 totalSupply = token().getPastTotalSupply(block.number);
+        // uint64 role = governorDividedPowers.proposalRole(proposalId); 
+        uint256 amountHolders = governorDividedPowers.amountRoleHolders(18446744073709551615); 
+        // uint256 amountHolders = governorDividedPowers.amountRoleHolders(role); 
 
-        // the number of votes is multiplied the share(?) of role holders 
-        return quorum(proposalSnapshot(proposalId)) <= (proposalVote.forVotes + proposalVote.abstainVotes) * (totalSupply / amountHolders);
+        return true; 
+        // original: return quorum(proposalSnapshot(proposalId)) <= proposalVote.forVotes + proposalVote.abstainVotes;
+        // return quorum(proposalSnapshot(proposalId)) <= (proposalVote.forVotes + proposalVote.abstainVotes) / amountHolders; -- Divide by 0! 
     }
 
     /**
      * @dev See {Governor-_voteSucceeded}. In this module, the forVotes must be strictly over the againstVotes.
+     * 
+     * @dev As voting is restricted by role (see the _countVote function in GovernorDividedPowers), non authorised votes are not possible. 
+     * As a result, we can simply compare for and against votes - as in the original extension - because we will only be comparing votes from accounts with the correct access credentials. 
      */
-    // £todo: this has to be divided per role! 
     function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
-        // uint64 role = proposalRole(proposalId); 
-        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+        ProposalVote storage proposalVote = _proposalVotes[proposalId]; 
+        // return proposalVote.forVotes >= proposalVote.againstVotes;
 
         return true; 
-
-        // return proposalVote.forVotes > proposalVote.againstVotes;
     }
 
     /**

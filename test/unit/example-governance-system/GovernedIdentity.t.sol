@@ -42,6 +42,7 @@ contract GovernedIdentityTest is Test {
     }
 
     modifier assignRoles() {
+        uint256 percentagePublicRole = 100; // every member is a citizen. 
         uint256 percentageCitizens = 100; // every member is a citizen. 
         uint256 percentageCouncillors = 10; // every 10th member is a councillor. 
         uint256 percentageJudges = 5; // every 20th member is a judge. 
@@ -102,7 +103,7 @@ contract GovernedIdentityTest is Test {
         lawsMock = new LawsMock(payable(address(governedIdentity)));
     }
 
-    function test_checkStateProposal() public distributeAndDelegateCommunityTokenMocks createProposal {
+    function test_checkStateProposal() public distributeAndDelegateCommunityTokenMocks createProposal assignRoles {
         console.log("block number at start:", block.number);
 
         vm.roll(7_000);
@@ -112,8 +113,11 @@ contract GovernedIdentityTest is Test {
         vm.roll(10_000);
         governedIdentity.state(proposalId);
         console.log("state at block number 10_000 roll", block.number);
-
-        vm.roll(100_000);
+        
+        vm.roll(28_910); // See: GovernorSettings(7200, /* 1 day */ 21600, /* 3 days */ 0) => 21600 + 7200 = 28800 as cut off. 
+        // vm.roll(100_000);
+        console.log("proposal Role:", governedIdentity.proposalRole(proposalId)); 
+        console.log("amount role holders:", governedIdentity.amountRoleHolders(1)); 
         governedIdentity.state(proposalId);
         console.log("state at block number 100_000 roll", block.number);
     }

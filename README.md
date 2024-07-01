@@ -176,9 +176,10 @@ To get a local copy up and running do the following.
 ## Known and Open Issues 
 
 - [ ] This protocol is under active development. Basic functionality is being implemented. 
-- [ ] The AccessControl and Governor contracts both have their own governance logics and protocol infrastructure. As a result, combining the two leads to quite a few impartial and illogical overlaps. There are, for instance, three(!) different execute functions and 89(!!) public functions in the example GovernedIdentity contract. 
+- [ ] The AccessControl and Governor contracts both have their own governance logics and protocol infrastructure. The former revolves around designating and revoking _roles_ that give access to functions; while the latter revolves around proposing and voting for _proposals_ that give access to function execution. As a result, combining the two leads to quite a few impartial and illogical overlaps. There are, for instance, three(!) different execute functions and 89(!!) public functions in the GovernedIdentity contract - an example implementation.    
 - [ ] In the end, this can only be solved by creating an alternative Governor contract that does not assume the use of Token Voting but designated roles in its governance mechanisms.    
-- [ ] ...a new 
+- [ ] Adding members to roles during a vote can alter quorum and votes needed to pass proposals. Traditionally a similar issue when it comes to ERC20 tokens is handled by the GovernorVotesQuorumFaction extension. I did not implement a similar check yet. 
+- [ ] The use of PUBLIC_ROLE does not work yet.  
 
 See the [open issues](https://github.com/7Cedars/loyalty-program-contracts/issues) for a full list of proposed features (and known issues).
 
