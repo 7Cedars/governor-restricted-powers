@@ -79,7 +79,7 @@ The extension restricts access to governance processes along restricted roles.
 It does this by relating the `AccessControl` to the `Governor contract` by restricting who can propose, vote on and execute proposals along the access control of an external function.
 
 Why do this?
-- It enables the separation of powers in a DAO along various roles.
+- It enables the separation of powers in a DAO along access roles.
 - This in turn enables the creation of checks and balances between these roles.
 - This is a tried and true approach to safeguarding decentralisation of (social, political and economic) assets in light of their tendency to centralise around informal elites.
 
@@ -91,7 +91,7 @@ How does it work?
 
 See the following diagram:
 
-  <a href="https://github.com/7Cedars/loyalty-program-contracts/blob/master/public/dividedPowersDiagram.png"> 
+  <a href="https://github.com/7Cedars/governor-restricted-powers/blob/master/public/dividedPowersDiagram.png"> 
     <img src="public/dividedPowersDiagram.png" alt="Schema Protocol" width="100%" height="100%">
   </a>
 
@@ -174,10 +174,10 @@ To get a local copy up and running do the following.
 ## Known and Open Issues 
 
 - [ ] This protocol is under active development. Basic functionality is being implemented. 
-- [ ] The AccessControl and Governor contracts both have their own governance logics and protocol infrastructure. The former revolves around designating and revoking _roles_ that give access to functions; while the latter revolves around proposing and voting for _proposals_ that give access to function execution. As a result, combining the two leads to quite a few impartial and illogical overlaps. There are, for instance, three(!) different execute functions and 89(!!) public functions in the GovernedIdentity contract - an example implementation.    
-- [ ] In the end, this can only be solved by creating an alternative Governor contract that does not assume the use of Token Voting but designated roles in its governance mechanisms.    
+- [ ] Combining the AccessControl and Governor contracts results in several incoherencies and logical inconsistencies. Both contracts have their own governance logics and protocol infrastructure. The former revolves around designating and revoking _roles_ that give access to functions; while the latter revolves around proposing and voting for _proposals_ that give access to function execution. As a result, there are three different execute functions and 89 public functions in the example GovernedIdentity contract.
+- [ ] In the end, this can only be solved by creating an alternative Governor contract that does not assume the use of Token Voting but designated roles in its governance mechanisms.
 - [ ] Adding members to roles during a vote can alter quorum and votes needed to pass proposals. Traditionally a similar issue when it comes to ERC20 tokens is handled by the GovernorVotesQuorumFaction extension. I did not implement a similar check yet. 
-- [ ] The use of PUBLIC_ROLE does not work yet.  
+- [ ] The use of PUBLIC_ROLE has not been implemented yet.  
 
 See the [open issues](https://github.com/7Cedars/loyalty-program-contracts/issues) for a full list of proposed features (and known issues).
 
