@@ -89,19 +89,17 @@ How does it work?
 - The governance process is restricted along the role restrictions of these external functions. 
 - For example: When an external function is restricted to `JUDGE_ROLE`, then it is only possible for those holding the `JUDGE_ROLE` to propose, vote on and execute proposals related to this fucntion. 
 
-See the following schema for more detail:
-<!-- NB! TODO -->
+See the following diagram:
 
-  <a href="https://github.com/7Cedars/loyalty-program-contracts/blob/master/public/PoCModularLoyaltyProgram.png"> 
-    <img src="public/PoCModularLoyaltyProgram.png" alt="Schema Protocol" width="100%" height="100%">
+  <a href="https://github.com/7Cedars/loyalty-program-contracts/blob/master/public/dividedPowersDiagram.png"> 
+    <img src="public/dividedPowersDiagram.png" alt="Schema Protocol" width="100%" height="100%">
   </a>
 
 ### Important files and folders
 All solidity contracts can be found in the `src` folder. The folder consists of the following subfolders and files. 
 
 governor-extensions
-- `GovernorDividedPowers.sol`: the extension to OpenZeppelin's `governor` contract. Overrides the `_propose`, `_countVote` and `_executeOperations` functions. It aims to keep breaking changes to other extensions to a minimum. 
-- `GovernorCountingVoteSuperSimple.sol`: An adaptation of the `GovernorCountingVoteSimple.sol` contract that is included in `governor.sol`. This counting contract does not take delegate weights into consideration. It is especially useful whenever votes among role holders (for instance council members or judges) should _not_ depent on voting power.  
+- `GovernorDividedPowers.sol`: the extension to OpenZeppelin's `governor` contract. Overrides the `_propose`, `_countVote` and `_executeOperations` functions. It aims to keep breaking changes to other extensions to a minimum. It incorporates a simple vote counting system based on the `GovernorCountingVoteSimple.sol` contract. 
 
 example-laws
 - `LawTemplate.sol`: A base contract for functions to use with `GovernorDividedPowers.sol`. Needs to be inherited by contracts that will be called by the `Governor` contract.  

@@ -69,7 +69,6 @@ contract GovernorDividedPowersTest is Test {
         selectorsRolesJudge[0] = 0xa196ad83; //  restrictedLaw()
         selectorsRolesJudge[1] = 0x79ba2b3b; //  restrictedGovernedLaw()
 
-
         vm.startPrank(communityMembers[0]);
         governedIdentity.setTargetFunctionRole(
             address(lawsMock), selectorsRolesCitizen, governedIdentity.CITIZEN()
