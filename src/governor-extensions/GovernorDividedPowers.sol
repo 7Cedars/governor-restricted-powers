@@ -29,11 +29,28 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
     error GovernorDividedPowers__ProposalContainsMultipleRoles(bytes[] calldatas);
     error GovernorDividedPowers__UnauthorizedVote(uint256 proposalId);
 
-    
+    /**
+     * @dev Supported vote types. Matches Governor Bravo ordering.
+     */
+    enum VoteType {
+        Against,
+        For,
+        Abstain
+    }
 
+    struct ProposalVote {
+        uint256 againstVotes;
+        uint256 forVotes;
+        uint256 abstainVotes;
+        mapping(address voter => bool) hasVoted;
+    }
+
+    mapping(uint256 proposalId => ProposalVote) private _proposalVotes;
+    
     // additional mapping needed to keep track of role restriction of proposal.
-    mapping(uint256 proposalId => uint64) public proposalRole;
-    // additional mapping needed fto keep track of number of accounts that hold roles. Otherwise voting per role does not work.  
+    mapping(uint256 proposalId => uint64 proposalRole) public proposalRole;
+
+    // additional mapping needed fto keep track of number of accounts that hold roles. Otherwise quorum per role cannot be assessed.  
     mapping(uint64 roleId => uint256) public amountRoleHolders; 
 
     /**
@@ -41,24 +58,24 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
      */
     constructor(address _initialAdmin) AccessManager(_initialAdmin) { }
 
+    /**
+     * @notice granting role function. 
+     * 
+     * @dev at the moment compound roles are not supported.
+     * Compound roles are roles that are a combination of other roles. (for example: everyone that is a judge and a councillor is also a citizen. Citizen = compound role)  
+     */
     function _grantRole(
         uint64 roleId,
         address account,
         uint32 grantDelay,
         uint32 executionDelay
     ) internal virtual override returns (bool) {
-
-        // £ CONT here. 
-        // Here counting has to be added.  
-
         bool newMember = super._grantRole(roleId, account, grantDelay, executionDelay); 
-
         amountRoleHolders[roleId]++;   
-       
         return newMember;
     }
 
-        /**
+    /**
      * @dev Internal version of {revokeRole} without access control. This logic is also used by {renounceRole}.
      * Returns true if the role was previously granted.
      *
@@ -139,14 +156,31 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
     function _countVote(
         uint256 proposalId,
         address account,
-        uint8, /* support */
+        uint8 support, 
         uint256, /* weight */
         bytes memory /* params */
     ) internal virtual override(Governor) {
         uint64 restrictedToRole = proposalRole[proposalId];
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
         (bool hasRole, ) = hasRole(restrictedToRole, account);
+
         if (restrictedToRole != 0 && hasRole == false) {
             revert GovernorDividedPowers__UnauthorizedVote(proposalId);
+        }
+        if (proposalVote.hasVoted[account]) {
+            revert GovernorAlreadyCastVote(account);
+        }
+        proposalVote.hasVoted[account] = true;
+
+        // Here weight is excluded.
+        if (support == uint8(VoteType.Against)) {
+            proposalVote.againstVotes += 1;
+        } else if (support == uint8(VoteType.For)) {
+            proposalVote.forVotes += 1;
+        } else if (support == uint8(VoteType.Abstain)) {
+            proposalVote.abstainVotes += 1;
+        } else {
+            revert GovernorInvalidVoteType();
         }
     }
 
@@ -177,7 +211,82 @@ abstract contract GovernorDividedPowers is Governor, AccessManager {
         }
     }
 
+ /**
+     * @dev See {IGovernor-COUNTING_MODE}.
+     */
+    // solhint-disable-next-line func-name-mixedcase
+    function COUNTING_MODE() public pure virtual override returns (string memory) {
+        return "support=bravo&quorum=for,abstain";
+    }
 
+    /**
+     * @dev See {IGovernor-hasVoted}.
+     */
+    function hasVoted(uint256 proposalId, address account) public view virtual override returns (bool) {
+        return _proposalVotes[proposalId].hasVoted[account];
+    }
 
+    /**
+     * @dev Accessor to the internal vote counts.
+     */
+    function proposalVotes(uint256 proposalId)
+        public
+        view
+        virtual
+        returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes)
+    {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+        return (proposalVote.againstVotes, proposalVote.forVotes, proposalVote.abstainVotes);
+    }
 
+    /**
+     * @dev See {Governor-_quorumReached}.
+     * 
+     * @dev change: number of votes is multiplied by the share of all tokens / role holders. 
+     * This to account for the fewer people that can vote.  
+     */
+    function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+        uint64 role = proposalRole[proposalId]; 
+        uint256 amountHolders = amountRoleHolders[role]; 
+
+        return true; 
+        // original: return quorum(proposalSnapshot(proposalId)) <= proposalVote.forVotes + proposalVote.abstainVotes;
+        // return quorum(proposalSnapshot(proposalId)) <= (proposalVote.forVotes + proposalVote.abstainVotes) / amountHolders; -- Divide by 0! 
+    }
+
+    /**
+     * @dev See {Governor-_voteSucceeded}. In this module, the forVotes must be strictly over the againstVotes.
+     * 
+     * @dev As voting is restricted by role (see the _countVote function in GovernorDividedPowers), non authorised votes are not possible. 
+     * As a result, we can simply compare for and against votes - as in the original extension - because we will only be comparing votes from accounts with the correct access credentials. 
+     */
+    function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId]; 
+        // return proposalVote.forVotes >= proposalVote.againstVotes;
+
+        return true; 
+    }
 }
+
+
+// Structure contract // -- from Patrick Collins.
+/* version */
+/* imports */
+/* errors */
+/* interfaces, libraries, contracts */
+/* Type declarations */
+/* State variables */
+/* Events */
+/* Modifiers */
+
+/* FUNCTIONS: */
+/* constructor */
+/* receive function (if exists) */
+/* fallback function (if exists) */
+/* external */
+/* public */
+/* internal */
+/* private */
+/* internal & private view & pure functions */
+/* external & public view & pure functions */

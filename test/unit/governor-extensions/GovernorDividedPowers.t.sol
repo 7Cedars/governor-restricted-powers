@@ -27,7 +27,7 @@ contract GovernorDividedPowersTest is Test {
     modifier assignRoles() {
         uint256 percentageCitizens = 100; // every member is a citizen. 
         uint256 percentageCouncillors = 10; // every 10th member is a councillor. 
-        uint256 percentageJudges = 100; // every 20th member is a judge. 
+        uint256 percentageJudges = 5; // every 20th member is a judge. 
 
         vm.startPrank(communityMembers[0]);
         for (uint160 i = 1; i < communityMembers.length; i++) {

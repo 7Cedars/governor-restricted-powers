@@ -27,7 +27,6 @@ contract GovernedIdentity is
     GovernorStorage,
     GovernorVotes,
     GovernorVotesQuorumFraction,
-    GovernorCountingDividedVotes,
     GovernorDividedPowers
     
 {
@@ -81,7 +80,7 @@ contract GovernedIdentity is
     function _countVote(uint256 proposalId, address account, uint8 support, uint256 weight, bytes memory params)
         internal
         virtual
-        override(Governor, GovernorDividedPowers, GovernorCountingDividedVotes)
+        override(Governor, GovernorDividedPowers)
     {
         return super._countVote(proposalId, account, support, weight, params);
     }
