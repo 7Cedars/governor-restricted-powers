@@ -67,6 +67,26 @@ contract LawsMock is LawTemplate {
 
         emit LawTriggered(keccak256(bytes(description)), true);
     }
+
+    function judgesRestrictedGovernedLaw(uint256 _var) external restricted onlyGovernance {
+        string memory description =
+            "A role restricted law that can only be called by judges through proposals and changes a state variable.";
+
+        // note: changes the same state variable as the restrictedGovernedLaw function. 
+        s_restrictedGovernedLaw = _var;
+
+        emit LawTriggered(keccak256(bytes(description)), true);
+    }
+
+    function councillorsRestrictedGovernedLaw(uint256 _var) external restricted onlyGovernance {
+        string memory description =
+            "A role restricted law that can only be called by councillors through proposals and changes a state variable.";
+
+        // note: changes the same state variable as the restrictedGovernedLaw function. 
+        s_restrictedGovernedLaw = _var;
+
+        emit LawTriggered(keccak256(bytes(description)), true);
+    }
 }
 
 // Structure contract // -- from Patrick Collins.

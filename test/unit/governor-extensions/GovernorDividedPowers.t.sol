@@ -113,6 +113,7 @@ contract GovernorDividedPowersTest is Test {
                 vm.assertEq(hasRole, true);
             }
         }
+        vm.stopPrank(); 
     }
 
     function test_GovernorCanRestrictFunctionByRole() public assignRoles {
@@ -127,12 +128,30 @@ contract GovernorDividedPowersTest is Test {
         vm.assertEq(assignedRole, governedIdentity.JUDGE());
     }
 
-    // £ todo 
     function test_GovernorRewardingRoleIsCounted() public assignRoles {
+        uint256 numberOfJudgesBefore = governedIdentity.amountRoleHolders(governedIdentity.JUDGE()); 
+        address MEMBER_TO_BE_JUDGE = communityMembers[11]; 
+
+        vm.startPrank(communityMembers[0]);
+        governedIdentity.grantRole(governedIdentity.JUDGE(), MEMBER_TO_BE_JUDGE, 0);
+        vm.stopPrank(); 
+
+        uint256 numberOfJudgesAfter = governedIdentity.amountRoleHolders(governedIdentity.JUDGE()); 
+
+        vm.assertEq(numberOfJudgesBefore + 1, numberOfJudgesAfter); 
     }
 
-    // £ todo 
     function test_GovernorRevokingRoleIsSubtracted() public assignRoles {
+        uint256 numberOfJudgesBefore = governedIdentity.amountRoleHolders(governedIdentity.JUDGE()); 
+        address JUDGE_TO_BE_REVOKED = communityMembers[20]; 
+
+        vm.startPrank(communityMembers[0]);
+        governedIdentity.revokeRole(governedIdentity.JUDGE(), JUDGE_TO_BE_REVOKED);
+        vm.stopPrank(); 
+
+        uint256 numberOfJudgesAfter = governedIdentity.amountRoleHolders(governedIdentity.JUDGE()); 
+
+        vm.assertEq(numberOfJudgesBefore - 1, numberOfJudgesAfter); 
     }
 
     function test_UnrestrictedFunctionCanBeCalledByAnyone() public {

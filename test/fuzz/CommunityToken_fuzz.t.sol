@@ -12,9 +12,9 @@ contract CommunityTokenTest is Test {
     }
 
     function testFuzz_SetNumber(address member) public {
-        if (member != address(0)) {
-            communityTokenMock.awardIdentity(member);
-            assertEq(communityTokenMock.balanceOf(member), 1);
-        }
+        vm.assume(member != address(0)); 
+
+        communityTokenMock.awardIdentity(member);
+        assertEq(communityTokenMock.balanceOf(member), 1);
     }
 }
