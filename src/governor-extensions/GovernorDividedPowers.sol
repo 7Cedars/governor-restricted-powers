@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.24;
 
 // modifier to restrict who can propose and vote on proposals based on restriction of fucntion that proposal calls.
 // notice the input. The function that get this modifier need to have these inputs.

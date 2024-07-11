@@ -9,7 +9,7 @@
 // NB: proposalStates = ['Pending', 'Active', 'Canceled', 'Defeated', 'Succeeded', 'Queued', 'Expired', 'Executed'];
 // NB:    enum VoteType { Against, For, Abstain }
 
-pragma solidity ^0.8.20;
+pragma solidity 0.8.24;
 
 import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {GovernorSettings} from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
