@@ -102,15 +102,15 @@ contract GovernorDividedPowersTest is Test {
         for (uint160 i = 1; i < communityMembers.length; i++) {
             if (i % (100 / percentageCitizens) == 0) {
                 (hasRole,) = governedIdentity.hasRole(governedIdentity.CITIZEN(), communityMembers[i]);
-                vm.assertEq(hasRole, true);
+                assert(hasRole == true);
             }
             if (i % (100 / percentageCouncillors) == 0) {
                 (hasRole,) = governedIdentity.hasRole(governedIdentity.COUNCILLOR(), communityMembers[i]);
-                vm.assertEq(hasRole, true);
+                assert(hasRole == true);
             }
             if (i % (100 / percentageJudges) == 0) {
                 (hasRole,) = governedIdentity.hasRole(governedIdentity.JUDGE(), communityMembers[i]);
-                vm.assertEq(hasRole, true);
+                assert(hasRole == true);
             }
         }
         vm.stopPrank(); 
@@ -125,7 +125,7 @@ contract GovernorDividedPowersTest is Test {
         vm.stopPrank();
 
         uint64 assignedRole = governedIdentity.getTargetFunctionRole(address(lawsMock), selectors[0]);
-        vm.assertEq(assignedRole, governedIdentity.JUDGE());
+        assert(assignedRole == governedIdentity.JUDGE());
     }
 
     function test_GovernorRewardingRoleIsCounted() public assignRoles {
@@ -138,7 +138,7 @@ contract GovernorDividedPowersTest is Test {
 
         uint256 numberOfJudgesAfter = governedIdentity.amountRoleHolders(governedIdentity.JUDGE()); 
 
-        vm.assertEq(numberOfJudgesBefore + 1, numberOfJudgesAfter); 
+        assert(numberOfJudgesBefore + 1 == numberOfJudgesAfter); 
     }
 
     function test_GovernorRevokingRoleIsSubtracted() public assignRoles {
@@ -151,7 +151,7 @@ contract GovernorDividedPowersTest is Test {
 
         uint256 numberOfJudgesAfter = governedIdentity.amountRoleHolders(governedIdentity.JUDGE()); 
 
-        vm.assertEq(numberOfJudgesBefore - 1, numberOfJudgesAfter); 
+        assert(numberOfJudgesBefore - 1 == numberOfJudgesAfter); 
     }
 
     function test_UnrestrictedFunctionCanBeCalledByAnyone() public {
@@ -160,7 +160,7 @@ contract GovernorDividedPowersTest is Test {
         vm.prank(address(999));
         lawsMock.unrestrictedLaw(proposedStateChange);
 
-        vm.assertEq(lawsMock.s_unrestrictedLaw(), proposedStateChange);
+        assert(lawsMock.s_unrestrictedLaw() == proposedStateChange);
     }
 
     function test_SuccesfulCallEmitsCorrectEvent() public {
@@ -190,7 +190,7 @@ contract GovernorDividedPowersTest is Test {
         vm.prank(communityMembers[20]); // every 20th community member is a judge.  
         lawsMock.restrictedLaw(proposedStateChange); // restricted by JUDGE role.
 
-        vm.assertEq(lawsMock.s_restrictedLaw(), proposedStateChange);
+        assert(lawsMock.s_restrictedLaw() == proposedStateChange);
     }
 
     function test_GovernedFunctionRevertsWithDirectCall() public {
@@ -226,7 +226,7 @@ contract GovernorDividedPowersTest is Test {
         governedIdentity.execute(address(lawsMock), dataCall);
         vm.stopPrank();
 
-        vm.assertEq(lawsMock.s_restrictedLaw(), proposedStateChange);
+        assert(lawsMock.s_restrictedLaw() == proposedStateChange);
     }
 
     function test_GovernedFunctionSucceedsWithProposalCall() public assignRoles restrictFunctions {
@@ -255,7 +255,7 @@ contract GovernorDividedPowersTest is Test {
         governedIdentity.execute(targets, values, calldatas, descriptionHash);
         vm.stopPrank(); 
 
-        vm.assertEq(lawsMock.s_unrestrictedGovernedLaw(), proposedStateChange);
+        assert(lawsMock.s_unrestrictedGovernedLaw() == proposedStateChange);
     }
 
     function test_GovernedRestrictedFunctionRevertsWithUnauthorisedProposalCall() public assignRoles restrictFunctions {
@@ -303,7 +303,7 @@ contract GovernorDividedPowersTest is Test {
         // check if community member has correct role to call function. 
         uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
         (bool hasRole , ) = governedIdentity.hasRole(role, communityMembers[20]);
-        vm.assertEq(hasRole, true); 
+        assert(hasRole == true); 
 
         // calling function directly - reverts. 
         vm.expectRevert();
@@ -329,7 +329,7 @@ contract GovernorDividedPowersTest is Test {
         // check if community member does NOT have correct role to call function. 
         uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
         (bool hasRole , ) = governedIdentity.hasRole(role, communityMembers[communityMemberId]);
-        vm.assertEq(hasRole, false); 
+        assert(hasRole == false); 
   
         vm.roll(block.number + 10_000);
         vm.expectRevert(); 
@@ -355,7 +355,7 @@ contract GovernorDividedPowersTest is Test {
         // check if community member has correct role to call function. 
         uint64 role = governedIdentity.getTargetFunctionRole(address(lawsMock), bytes4(dataCall)); 
         (bool hasRole , ) = governedIdentity.hasRole(role, communityMembers[communityMemberId]);
-        vm.assertEq(hasRole, true); 
+        assert(hasRole == true); 
         
         vm.roll(block.number + 10_000);
         vm.prank(communityMembers[communityMemberId]);
