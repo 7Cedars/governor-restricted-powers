@@ -173,12 +173,23 @@ To get a local copy up and running do the following.
 <!-- ROADMAP -->
 ## Known and Open Issues 
 
-- [ ] This protocol is under active development. Basic functionality is being implemented. 
-- [ ] Combining the AccessControl and Governor contracts results in several incoherencies and logical inconsistencies. Both contracts have their own governance logics and protocol infrastructure. The former revolves around designating and revoking _roles_ that give access to functions; while the latter revolves around proposing and voting for _proposals_ that give access to function execution. As a result, there are three different execute functions and 89 public functions in the example GovernedIdentity contract.
-- [ ] In the end, this can only be solved by creating an alternative Governor contract that does not assume the use of Token Voting but designated roles in its governance mechanisms.
-- [ ] Adding members to roles during a vote can alter quorum and votes needed to pass proposals. Traditionally a similar issue when it comes to ERC20 tokens is handled by the GovernorVotesQuorumFaction extension. I did not implement a similar check yet. 
-- [ ] The use of PUBLIC_ROLE has not been implemented yet.
-- [ ] The protocol does not properly support accounts and functions with multiple rolls. In part, this is because ppenZeppelin's `AccessControl` does not fully support multiple roles restricting the same function.   
+- This protocol is under active development. Basic functionality is incomplete. 
+
+- Combining the AccessControl and Governor contracts results in several inconsistencies. Both contracts have their own governance logics and protocol infrastructure. The former revolves around designating and revoking _roles_ that give access to functions; while the latter revolves around proposing and voting for _proposals_ that give access to function execution. As a result 
+  - Role restrictions of external functions are set from the governance contract, which is a workflow that invites for setting role restrictions incorrectly. They should be set within the functions themselves. 
+  - There are three different execute functions. One relates to the execution of a proposal (inherited from Governor) while the other two relate to executing an external function (inherited from AccessManager). 
+  - There are 89 public functions in total. It is excessive and invites for bugs and security risks.
+  - The only way to solve these issues is to create an entirely new governance protocol. 
+  
+- The `GovernorDividedPowers` implies two different levels at which votes are cast: A first in which individual members are selected for roles and a second in which role holders vote on proposals. These two levels have different voting logics.    
+  - The first can be done on the basis of delegated token voting - similar to the default method in the current Governor protocol. For example, the 20 members with most delegated votes are automatically given a councillor role in a DAO. 
+  - The second cannot have delegated voting and should not (in my opinion) work with weighted votes. It works best with N out of M logics that are similar to multisig wallets. For example, at least 5 judges need to vote yes from a total of 9 to revert a previous decision made by councillors.
+  - Implementing two different voting logics in a single governance regime is currently too complex. A solution is to further abstract away voting systems from the governance system. For example linking an external functions to a particular voting mechanism; and collecting several default voting mechanisms in a separate protocol.
+  
+- A few more specific issues:   
+  - Adding members to roles during a vote can alter quorum and votes needed to pass proposals. Traditionally a similar issue when it comes to ERC20 tokens is handled by the GovernorVotesQuorumFaction extension. I did not implement a similar check yet. 
+  - The use of PUBLIC_ROLE has not been implemented yet.
+  - OpenZeppelin's `AccessManager` does not fully support multiple roles restricting a single function. If you call `getTargetFunctionRole` you only receive a single role restriction for a particular function. A function that checks if a particular function is restricted by a particular role (as in `hasRole` for accounts) does not yet exist.
 
 See the [open issues](https://github.com/7Cedars/loyalty-program-contracts/issues) for a full list of proposed features (and known issues).
 

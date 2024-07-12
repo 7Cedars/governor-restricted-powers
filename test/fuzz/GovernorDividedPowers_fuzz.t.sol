@@ -361,7 +361,7 @@ contract GovernorDividedPowers_fuzz is Test {
         // get to time point where vote is open
         vm.roll(60_000);
 
-        // checks 
+        // asserts 
         (uint256 CouncillorAgainst, uint256 CouncillorFor, uint256 CouncillorAbstain) = governedIdentity.proposalVotes(proposalIdCouncillor);
         (uint256 JudgesAgainst, uint256 JudgesFor, uint256 JudgesAbstain) = governedIdentity.proposalVotes(proposalIdJudge);
 
